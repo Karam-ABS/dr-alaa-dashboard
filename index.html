@@ -1,409 +1,413 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Dr. Alaa — ABS Development Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-:root {
-  --bg:#0f172a; --s1:#1e293b; --s2:#273449; --border:#334155;
-  --text:#f1f5f9; --muted:#94a3b8;
-  --green:#10b981; --amber:#f59e0b; --red:#ef4444; --blue:#6366f1; --pink:#ec4899; --cyan:#14b8a6;
-}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+:root{
+--bg:#f8f7f4;--s1:#ffffff;--s2:#f1f0ec;
+--text:#0b0b0b;--muted:#898781;--sub:#52514e;
+--border:rgba(11,11,11,0.1);--border-strong:rgba(11,11,11,0.18);
+--blue:#2a78d6;--green:#1baf7a;--amber:#eda100;--red:#e34948;--violet:#4a3aa7;
+}
+[data-mode=dark]{
+--bg:#111110;--s1:#1a1a19;--s2:#222221;
+--text:#ffffff;--muted:#898781;--sub:#c3c2b7;
+--border:rgba(255,255,255,0.1);--border-strong:rgba(255,255,255,0.18);
+--blue:#3987e5;--green:#199e70;--amber:#c98500;--red:#e66767;--violet:#9085e9;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;min-height:100vh;}
 
-/* NAV */
-.nav{background:var(--s1);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
-.nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1rem;}
-.nav-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-.nav-right{display:flex;align-items:center;gap:12px;}
-.nav-date{color:var(--muted);font-size:0.8rem;}
-.pat-btn{padding:6px 14px;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:0.8rem;}
-.pat-btn:hover{border-color:var(--blue);}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:0.5px solid var(--border);background:var(--s1);position:sticky;top:0;z-index:100;}
+.topbar-title{font-size:15px;font-weight:500;letter-spacing:-0.01em;}
+.topbar-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.mode-btn{padding:5px 14px;border:0.5px solid var(--border-strong);border-radius:6px;background:transparent;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;}
+.mode-btn:hover{background:var(--s2);}
+.refresh-btn{padding:5px 14px;border:0.5px solid var(--border-strong);border-radius:6px;background:transparent;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;}
+.refresh-btn:hover{background:var(--s2);}
+.live-label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
 
-/* MAIN */
-.main{padding:24px;max-width:1400px;margin:0 auto;}
+.page{padding:22px 28px;display:flex;flex-direction:column;gap:18px;}
 
-/* SECTION */
-.section-title{font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:28px 0 14px;display:flex;align-items:center;gap:8px;}
-.section-title::before{content:'';display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px;}
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
+.kpi{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;padding:16px 18px;}
+.kpi-label{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;}
+.kpi-val{font-size:28px;font-weight:500;letter-spacing:-0.02em;line-height:1;}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:5px;}
+.kpi-val.amber{color:var(--amber);}
+.kpi-val.green{color:var(--green);}
+.kpi-val.blue{color:var(--blue);}
 
-/* KPI */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:8px;}
-.kpi{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:20px 16px;text-align:center;position:relative;overflow:hidden;}
-.kpi::after{content:'';position:absolute;inset:0;opacity:0.05;border-radius:12px;}
-.kpi.kblue{border-color:rgba(99,102,241,0.4);}.kpi.kblue::after{background:var(--blue);}
-.kpi.kamber{border-color:rgba(245,158,11,0.4);}.kpi.kamber::after{background:var(--amber);}
-.kpi.kgreen{border-color:rgba(16,185,129,0.4);}.kpi.kgreen::after{background:var(--green);}
-.kpi.kred{border-color:rgba(239,68,68,0.4);}.kpi.kred::after{background:var(--red);}
-.kpi.kpink{border-color:rgba(236,72,153,0.4);}.kpi.kpink::after{background:var(--pink);}
-.kpi.kcyan{border-color:rgba(20,184,166,0.4);}.kpi.kcyan::after{background:var(--cyan);}
-.kpi-icon{font-size:1.5rem;margin-bottom:8px;}
-.kpi-val{font-size:2rem;font-weight:800;line-height:1;}
-.kpi-label{font-size:0.72rem;color:var(--muted);margin-top:5px;font-weight:500;}
+.section-label{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;}
 
-/* CHARTS GRID */
-.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
-.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
-.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
-.card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:20px;}
-.card-title{font-size:0.85rem;font-weight:700;margin-bottom:16px;color:var(--text);display:flex;align-items:center;justify-content:space-between;}
-.card-title .sub{font-size:0.72rem;color:var(--muted);font-weight:400;}
-canvas{max-height:260px;}
-.full{grid-column:1/-1;}
+.charts-row{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:12px;}
+.card{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;padding:20px;}
+.card-title{font-size:13px;font-weight:500;margin-bottom:3px;}
+.card-sub{font-size:11px;color:var(--muted);margin-bottom:16px;}
+.chart-wrap{position:relative;width:100%;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub);}
+.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
 
-/* DEV TABLE */
-.dev-table{width:100%;border-collapse:collapse;font-size:0.85rem;}
-.dev-table th{background:var(--s2);padding:10px 14px;text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);border-bottom:1px solid var(--border);}
-.dev-table td{padding:12px 14px;border-bottom:1px solid var(--s2);vertical-align:middle;}
-.dev-table tr:last-child td{border-bottom:none;}
-.dev-table tr:hover td{background:var(--s2);}
-.avatar{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:0.8rem;color:#fff;margin-right:10px;vertical-align:middle;}
-.bar-cell{display:flex;align-items:center;gap:8px;}
-.bar-bg{flex:1;height:8px;background:var(--s2);border-radius:4px;overflow:hidden;min-width:60px;}
-.bar-fill{height:100%;border-radius:4px;}
-.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:700;}
-.badge.green{background:rgba(16,185,129,0.15);color:var(--green);}
-.badge.amber{background:rgba(245,158,11,0.15);color:var(--amber);}
-.badge.red{background:rgba(239,68,68,0.15);color:var(--red);}
-.badge.blue{background:rgba(99,102,241,0.15);color:var(--blue);}
+.table-card{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+th{padding:10px 20px;text-align:left;font-size:11px;font-weight:500;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;border-bottom:0.5px solid var(--border);background:var(--s2);}
+td{padding:11px 20px;border-bottom:0.5px solid var(--border);font-size:13px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--s2);}
+.dev-cell{display:flex;align-items:center;gap:10px;}
+.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0;}
+.bar-wrap{display:flex;align-items:center;gap:8px;}
+.bar-bg{width:80px;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;border:0.5px solid var(--border);}
+.bar-fill{height:100%;border-radius:3px;}
+.pill{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:500;}
+.pill.green{background:rgba(27,175,122,0.12);color:var(--green);}
+.pill.amber{background:rgba(237,161,0,0.12);color:var(--amber);}
+.pill.red{background:rgba(227,73,72,0.12);color:var(--red);}
+.num.amber{color:var(--amber);font-weight:500;}
+.num.green{color:var(--green);font-weight:500;}
+.num.blue{color:var(--blue);font-weight:500;}
 
-/* INDIVIDUAL DEV CARDS */
-.dev-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
-.dev-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:18px;}
-.dev-card-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
-.dev-card-name{font-weight:700;font-size:0.95rem;}
-.dev-card-sub{font-size:0.75rem;color:var(--muted);}
-.dev-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
-.dev-stat{background:var(--s2);border-radius:8px;padding:10px;text-align:center;}
-.dev-stat .n{font-size:1.4rem;font-weight:800;}
-.dev-stat .l{font-size:0.68rem;color:var(--muted);margin-top:2px;}
-.dev-stat.a .n{color:var(--amber);}
-.dev-stat.c .n{color:var(--green);}
-.dev-stat.nw .n{color:var(--blue);}
-.prog{height:6px;background:var(--s2);border-radius:3px;overflow:hidden;margin:8px 0 4px;}
-.prog-fill{height:100%;border-radius:3px;}
-.prog-label{display:flex;justify-content:space-between;font-size:0.7rem;color:var(--muted);}
+.dev-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.dev-card{background:var(--s1);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;}
+.dev-top{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.dev-name{font-size:12px;font-weight:500;}
+.dev-mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;}
+.mini-stat{background:var(--s2);border-radius:6px;padding:8px 4px;text-align:center;}
+.mini-n{font-size:16px;font-weight:500;line-height:1;}
+.mini-l{font-size:10px;color:var(--muted);margin-top:2px;}
+.mini-n.a{color:var(--amber);}
+.mini-n.c{color:var(--green);}
+.mini-n.nw{color:var(--blue);}
+.prog-bar{height:4px;background:var(--s2);border-radius:2px;overflow:hidden;margin-top:8px;}
+.prog-fill{height:100%;border-radius:2px;}
+.prog-label{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px;}
 
 /* PAT MODAL */
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;}
-.modal.open{display:flex;}
-.modal-box{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:420px;}
-.modal-box h2{margin-bottom:8px;}
-.modal-box p{color:var(--muted);font-size:0.85rem;margin-bottom:20px;}
-.modal-box input{width:100%;padding:10px 14px;background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;margin-bottom:14px;outline:none;}
-.modal-box input:focus{border-color:var(--blue);}
-.modal-box .btn{width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:0.95rem;font-weight:600;cursor:pointer;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:var(--s1);border:0.5px solid var(--border-strong);border-radius:14px;padding:32px;width:100%;max-width:400px;}
+.modal h2{font-size:16px;font-weight:500;margin-bottom:6px;}
+.modal p{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.modal input{width:100%;padding:10px 14px;background:var(--s2);border:0.5px solid var(--border-strong);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:12px;outline:none;font-family:inherit;}
+.modal input:focus{border-color:var(--blue);}
+.modal-btn{width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;}
+.modal-btn:hover{opacity:0.9;}
+.modal-skip{width:100%;padding:8px;background:transparent;color:var(--muted);border:none;font-size:12px;cursor:pointer;margin-top:6px;font-family:inherit;}
+.modal-skip:hover{color:var(--text);}
 
-/* LOADING OVERLAY */
-.loading{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.92);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+/* LOADING */
+.loading{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
 .loading.show{display:flex;}
-.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;}
+.spinner{width:32px;height:32px;border:2.5px solid rgba(255,255,255,0.15);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
-.load-txt{color:var(--muted);font-size:0.88rem;}
-
-.footer{text-align:center;color:var(--muted);font-size:0.75rem;padding:20px 0;margin-top:20px;border-top:1px solid var(--border);}
-
-@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+.load-txt{color:rgba(255,255,255,0.7);font-size:13px;}
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav class="nav">
-  <div class="nav-brand">
-    <div class="dot"></div>
-    Dr. Alaa — ABS Development Dashboard
-  </div>
-  <div class="nav-right">
-    <span class="nav-date" id="nav-date"></span>
-    <button class="pat-btn" onclick="openModal()">🔑 Update PAT</button>
-    <button class="pat-btn" onclick="fetchLive()">🔄 Refresh</button>
-  </div>
-</nav>
-
 <!-- LOADING -->
 <div class="loading" id="loading">
   <div class="spinner"></div>
-  <div class="load-txt" id="load-txt">Loading...</div>
+  <div class="load-txt" id="load-txt">Fetching live data...</div>
 </div>
 
 <!-- PAT MODAL -->
-<div class="modal" id="modal">
-  <div class="modal-box">
-    <h2>🔑 Azure DevOps PAT</h2>
-    <p>Enter your Personal Access Token. It is saved only in your browser session and never sent anywhere else.</p>
-    <input type="password" id="pat-input" placeholder="Paste PAT here..."/>
-    <button class="btn" onclick="savePATAndLoad()">Load Dashboard</button>
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>Connect to Azure DevOps</h2>
+    <p>Enter your Personal Access Token to load live data. It stays in your browser session only and is never stored elsewhere.</p>
+    <input type="password" id="pat-input" placeholder="Paste your PAT here..."/>
+    <button class="modal-btn" onclick="savePATAndLoad()">Load live dashboard</button>
+    <button class="modal-skip" onclick="closeModal()">Continue with cached data</button>
   </div>
 </div>
 
-<!-- MAIN -->
-<div class="main" id="main-content">
+<!-- TOP BAR -->
+<div class="topbar">
+  <div>
+    <div class="topbar-title">ABS-Central — Development Intelligence</div>
+    <div class="topbar-sub" id="ts">Showing cached data</div>
+  </div>
+  <div class="topbar-right">
+    <div class="live-label"><span class="live-dot"></span>Live</div>
+    <button class="refresh-btn" onclick="fetchLive()">Refresh</button>
+    <button class="mode-btn" onclick="toggleMode()">Toggle mode</button>
+  </div>
+</div>
 
-  <!-- KPIs -->
-  <div class="section-title">Executive Summary</div>
-  <div class="kpi-grid" id="kpi-grid">
-    <div class="kpi kblue"><div class="kpi-icon">📋</div><div class="kpi-val" id="k-total">200</div><div class="kpi-label">Total Work Items</div></div>
-    <div class="kpi kamber"><div class="kpi-icon">⚡</div><div class="kpi-val" id="k-active">147</div><div class="kpi-label">Active</div></div>
-    <div class="kpi kgreen"><div class="kpi-icon">✅</div><div class="kpi-val" id="k-closed">43</div><div class="kpi-label">Closed</div></div>
-    <div class="kpi kred"><div class="kpi-icon">🆕</div><div class="kpi-val" id="k-new">8</div><div class="kpi-label">New / Backlog</div></div>
-    <div class="kpi kgreen"><div class="kpi-icon">🎯</div><div class="kpi-val" id="k-rate">22%</div><div class="kpi-label">Completion Rate</div></div>
-    <div class="kpi kcyan"><div class="kpi-icon">👥</div><div class="kpi-val">10</div><div class="kpi-label">Developers</div></div>
+<!-- PAGE -->
+<div class="page">
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Total items</div><div class="kpi-val" id="k-total">200</div><div class="kpi-sub">All developers</div></div>
+    <div class="kpi"><div class="kpi-label">Active</div><div class="kpi-val amber" id="k-active">147</div><div class="kpi-sub">In progress</div></div>
+    <div class="kpi"><div class="kpi-label">Closed</div><div class="kpi-val green" id="k-closed">43</div><div class="kpi-sub">Completed</div></div>
+    <div class="kpi"><div class="kpi-label">New / Backlog</div><div class="kpi-val blue" id="k-new">8</div><div class="kpi-sub">Not started</div></div>
+    <div class="kpi"><div class="kpi-label">Completion rate</div><div class="kpi-val green" id="k-rate">22%</div><div class="kpi-sub">Closed ÷ total</div></div>
+    <div class="kpi"><div class="kpi-label">Developers</div><div class="kpi-val" id="k-devs">10</div><div class="kpi-sub">Active contributors</div></div>
   </div>
 
-  <!-- ROW 1: State + Workload -->
-  <div class="section-title">Team Overview</div>
-  <div class="grid-2">
+  <div class="section-label">Team overview</div>
+
+  <div class="charts-row">
     <div class="card">
-      <div class="card-title">Overall State Distribution <span class="sub">All work items</span></div>
-      <canvas id="c-state"></canvas>
+      <div class="card-title">State distribution</div>
+      <div class="card-sub">All work items</div>
+      <div class="chart-wrap" style="height:180px"><canvas id="c-donut" role="img" aria-label="Donut chart showing state distribution">147 active, 43 closed, 8 new.</canvas></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#eda100"></div>Active — <span id="l-active">147</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1baf7a"></div>Closed — <span id="l-closed">43</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2a78d6"></div>New — <span id="l-new">8</span></div>
+      </div>
     </div>
     <div class="card">
-      <div class="card-title">Workload per Developer <span class="sub">Total items assigned</span></div>
-      <canvas id="c-workload"></canvas>
+      <div class="card-title">Completion rate per developer</div>
+      <div class="card-sub">Closed ÷ total (%)</div>
+      <div class="chart-wrap" style="height:210px"><canvas id="c-comp" role="img" aria-label="Horizontal bar chart of completion rate per developer">Completion rates per developer.</canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Workload breakdown</div>
+      <div class="card-sub">Active · Closed · New per developer</div>
+      <div class="chart-wrap" style="height:210px"><canvas id="c-stack" role="img" aria-label="Stacked bar chart of work items per developer">Work items per developer by state.</canvas></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#eda100"></div>Active</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1baf7a"></div>Closed</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2a78d6"></div>New</div>
+      </div>
     </div>
   </div>
 
-  <!-- ROW 2: Stacked + Completion -->
-  <div class="grid-2" style="margin-top:18px;">
-    <div class="card">
-      <div class="card-title">Active vs Closed vs New <span class="sub">Per developer</span></div>
-      <canvas id="c-stacked"></canvas>
-    </div>
-    <div class="card">
-      <div class="card-title">Completion Rate % <span class="sub">Closed ÷ Total</span></div>
-      <canvas id="c-completion"></canvas>
-    </div>
-  </div>
+  <div class="section-label">Developer summary</div>
 
-  <!-- Developer Summary Table -->
-  <div class="section-title">Developer Performance Table</div>
-  <div class="card">
-    <table class="dev-table" id="dev-table">
+  <div class="table-card">
+    <table>
       <thead><tr>
-        <th>Developer</th>
-        <th>Total</th>
-        <th>Active</th>
-        <th>Closed</th>
-        <th>New</th>
-        <th>Workload</th>
-        <th>Completion</th>
+        <th>Developer</th><th>Total</th><th>Active</th><th>Closed</th><th>New</th><th>Workload</th><th>Completion</th>
       </tr></thead>
       <tbody id="dev-tbody"></tbody>
     </table>
   </div>
 
-  <!-- Individual Dev Cards -->
-  <div class="section-title">Individual Developer Breakdown</div>
-  <div class="dev-cards" id="dev-cards"></div>
+  <div class="section-label">Individual breakdown</div>
+  <div class="dev-row" id="dev-cards"></div>
 
-  <div class="footer" id="footer">ABS-Central · Dr. Alaa Overview · Data from Azure DevOps</div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-const ORG = "ADVBUSSOL", PROJECT = "ABS-Central";
-const COLORS = ["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899","#14b8a6","#f97316","#8b5cf6","#84cc16"];
+const ORG="ADVBUSSOL", PROJECT="ABS-Central";
 
-// Seed data (always shown, replaced when PAT is provided)
-const SEED = {
-  "Anas Al Tobasi":      {active:40,closed:8,new:1,total:49},
-  "Hamzah Lababidi":     {active:19,closed:11,new:2,total:32},
-  "Ahmad Moshtha":       {active:16,closed:6,new:0,total:22},
-  "Mohammad Alkhalaileh":{active:12,closed:8,new:2,total:22},
-  "Moath Asfour":        {active:18,closed:1,new:1,total:20},
-  "Tareq Alamoudi":      {active:19,closed:0,new:0,total:19},
-  "Hashem Qaryouti":     {active:7,closed:6,new:2,total:15},
-  "Omar Alzubi":         {active:14,closed:0,new:0,total:14},
-  "Karam Albataineh":    {active:2,closed:2,new:0,total:4},
-  "Jamal Nofal":         {active:2,closed:1,new:0,total:3},
-};
+const SEED=[
+  {name:"Anas Al Tobasi",      active:40,closed:8, new:1, color:"#2a78d6"},
+  {name:"Hamzah Lababidi",     active:19,closed:11,new:2, color:"#1baf7a"},
+  {name:"Ahmad Moshtha",       active:16,closed:6, new:0, color:"#eda100"},
+  {name:"Mohammad Alkhalaileh",active:12,closed:8, new:2, color:"#4a3aa7"},
+  {name:"Moath Asfour",        active:18,closed:1, new:1, color:"#e34948"},
+  {name:"Tareq Alamoudi",      active:19,closed:0, new:0, color:"#199e70"},
+  {name:"Hashem Qaryouti",     active:7, closed:6, new:2, color:"#c98500"},
+  {name:"Omar Alzubi",         active:14,closed:0, new:0, color:"#3987e5"},
+  {name:"Karam Albataineh",    active:2, closed:2, new:0, color:"#e87ba4"},
+  {name:"Jamal Nofal",         active:2, closed:1, new:0, color:"#eb6834"},
+].map(d=>({...d,total:d.active+d.closed+d.new}));
 
-let charts = {};
+let DEVS=[...SEED];
+let charts={};
 
-function getPAT(){ return sessionStorage.getItem("ado_pat")||""; }
-function openModal(){ document.getElementById("modal").classList.add("open"); }
-function closeModal(){ document.getElementById("modal").classList.remove("open"); }
+function getPAT(){return sessionStorage.getItem("ado_pat")||"";}
+function auth(p){return "Basic "+btoa(":"+p);}
+function cr(d){return d.total?Math.round(d.closed/d.total*100):0;}
+function crColor(v){return v>=70?"#1baf7a":v>=40?"#eda100":"#e34948";}
+function crClass(v){return v>=70?"green":v>=40?"amber":"red";}
+function shortName(n){return n.split(" ")[0];}
+
+function isDark(){return document.documentElement.dataset.mode==="dark";}
+function getC(){return isDark()?{grid:"#2c2c2a",tick:"#898781",text:"#c3c2b7"}:{grid:"#e1e0d9",tick:"#898781",text:"#52514e"};}
+
+function openModal(){document.getElementById("overlay").classList.add("open");}
+function closeModal(){document.getElementById("overlay").classList.remove("open");}
 function savePATAndLoad(){
-  const p = document.getElementById("pat-input").value.trim();
-  if(!p) return;
-  sessionStorage.setItem("ado_pat", p);
+  const p=document.getElementById("pat-input").value.trim();
+  if(!p)return;
+  sessionStorage.setItem("ado_pat",p);
   closeModal();
   fetchLive();
 }
-function showLoad(t){ document.getElementById("loading").classList.add("show"); document.getElementById("load-txt").textContent=t||"Loading..."; }
-function hideLoad(){ document.getElementById("loading").classList.remove("show"); }
-function auth(pat){ return "Basic "+btoa(":"+pat); }
 
-// Update date
-function updateDate(){
-  const now = new Date();
-  document.getElementById("nav-date").textContent = now.toLocaleDateString("en-US",{weekday:"short",year:"numeric",month:"short",day:"numeric"})+" · "+now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
-}
+function showLoad(t){document.getElementById("loading").classList.add("show");document.getElementById("load-txt").textContent=t;}
+function hideLoad(){document.getElementById("loading").classList.remove("show");}
 
 async function fetchLive(){
-  const pat = getPAT();
-  if(!pat){ openModal(); return; }
+  const pat=getPAT();
+  if(!pat){openModal();return;}
   showLoad("Running WIQL query...");
-  try {
-    const wiql = { query: `SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject]='${PROJECT}' AND [System.WorkItemType] IN ('Epic','Feature','User Story','Task','Issue','Bug') ORDER BY [System.AssignedTo]` };
-    const wr = await fetch(`https://dev.azure.com/${ORG}/${PROJECT}/_apis/wit/wiql?api-version=7.1`,
-      {method:"POST",headers:{"Authorization":auth(pat),"Content-Type":"application/json"},body:JSON.stringify(wiql)});
-    if(!wr.ok) throw new Error("WIQL "+wr.status);
-    const wj = await wr.json();
-    const ids = (wj.workItems||[]).map(w=>w.id);
-    if(!ids.length){ hideLoad(); return; }
-
-    showLoad(`Fetching ${ids.length} work items...`);
-    const fields = ["System.Id","System.Title","System.State","System.AssignedTo","System.WorkItemType","System.CreatedDate","Microsoft.VSTS.Scheduling.StoryPoints"];
-    let all = [];
+  try{
+    const wr=await fetch(`https://dev.azure.com/${ORG}/${PROJECT}/_apis/wit/wiql?api-version=7.1`,
+      {method:"POST",headers:{"Authorization":auth(pat),"Content-Type":"application/json"},
+       body:JSON.stringify({query:`SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject]='${PROJECT}' AND [System.WorkItemType] IN ('Epic','Feature','User Story','Task','Issue','Bug') ORDER BY [System.AssignedTo]`})});
+    if(!wr.ok)throw new Error("WIQL "+wr.status);
+    const wj=await wr.json();
+    const ids=(wj.workItems||[]).map(w=>w.id);
+    if(!ids.length){hideLoad();return;}
+    showLoad(`Loading ${ids.length} items...`);
+    const fields=["System.Id","System.State","System.AssignedTo","System.WorkItemType"];
+    let all=[];
     for(let i=0;i<ids.length;i+=200){
       const chunk=ids.slice(i,i+200);
-      const br = await fetch(`https://dev.azure.com/${ORG}/${PROJECT}/_apis/wit/workitemsbatch?api-version=7.1`,
+      const br=await fetch(`https://dev.azure.com/${ORG}/${PROJECT}/_apis/wit/workitemsbatch?api-version=7.1`,
         {method:"POST",headers:{"Authorization":auth(pat),"Content-Type":"application/json"},body:JSON.stringify({ids:chunk,fields})});
-      if(!br.ok) throw new Error("Batch "+br.status);
-      const bj = await br.json();
-      all = all.concat(bj.value||[]);
+      if(!br.ok)throw new Error("Batch "+br.status);
+      const bj=await br.json();
+      all=all.concat(bj.value||[]);
     }
-
-    // Build devMap from live data
-    const devMap = {};
+    const map={};
     all.forEach(wi=>{
-      const f = wi.fields;
-      const a = f["System.AssignedTo"];
-      const name = a ? a.displayName.replace(" ABS","").trim() : "Unassigned";
-      const state = f["System.State"]||"Unknown";
-      if(!devMap[name]) devMap[name]={active:0,closed:0,new:0,total:0};
-      devMap[name].total++;
-      if(state==="Active") devMap[name].active++;
-      else if(state==="Closed") devMap[name].closed++;
-      else if(state==="New") devMap[name].new++;
+      const f=wi.fields;
+      const a=f["System.AssignedTo"];
+      if(!a)return;
+      const name=a.displayName.replace(" ABS","").trim();
+      const state=f["System.State"]||"";
+      if(!map[name])map[name]={name,active:0,closed:0,new:0,total:0,color:"#2a78d6"};
+      map[name].total++;
+      if(state==="Active")map[name].active++;
+      else if(state==="Closed")map[name].closed++;
+      else if(state==="New")map[name].new++;
     });
-
-    renderAll(devMap);
+    DEVS=Object.values(map).sort((a,b)=>b.total-a.total);
+    const colors=["#2a78d6","#1baf7a","#eda100","#4a3aa7","#e34948","#199e70","#c98500","#3987e5","#e87ba4","#eb6834"];
+    DEVS.forEach((d,i)=>d.color=colors[i%colors.length]);
+    renderAll();
     hideLoad();
-    document.getElementById("footer").textContent = `ABS-Central · Dr. Alaa Overview · Live data · ${new Date().toLocaleString()} · ${all.length} work items`;
-  } catch(e){
+    const now=new Date();
+    document.getElementById("ts").textContent=`Live data · ${now.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})} · ${now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})} · ${all.length} items`;
+  }catch(e){
     hideLoad();
-    alert("Error fetching live data: "+e.message+"\n\nShowing cached data.");
-    renderAll(SEED);
+    alert("Could not fetch live data: "+e.message+"\n\nShowing cached data.");
+    DEVS=[...SEED];
+    renderAll();
   }
 }
 
-function renderAll(devMap){
+function renderAll(){
+  const sorted=[...DEVS].sort((a,b)=>b.total-a.total);
+  const maxT=sorted[0]?.total||1;
+  const tA=sorted.reduce((s,d)=>s+d.active,0);
+  const tC=sorted.reduce((s,d)=>s+d.closed,0);
+  const tN=sorted.reduce((s,d)=>s+d.new,0);
+  const tAll=sorted.reduce((s,d)=>s+d.total,0);
+
+  document.getElementById("k-total").textContent=tAll;
+  document.getElementById("k-active").textContent=tA;
+  document.getElementById("k-closed").textContent=tC;
+  document.getElementById("k-new").textContent=tN;
+  document.getElementById("k-rate").textContent=(tAll?Math.round(tC/tAll*100):0)+"%";
+  document.getElementById("k-devs").textContent=sorted.length;
+  document.getElementById("l-active").textContent=tA;
+  document.getElementById("l-closed").textContent=tC;
+  document.getElementById("l-new").textContent=tN;
+
+  buildCharts(sorted);
+  buildTable(sorted,maxT);
+  buildCards(sorted);
+}
+
+function buildCharts(sorted){
   Object.values(charts).forEach(c=>c.destroy());
   charts={};
+  const C=getC();
+  const names=sorted.map(d=>shortName(d.name));
+  const tA=sorted.reduce((s,d)=>s+d.active,0);
+  const tC=sorted.reduce((s,d)=>s+d.closed,0);
+  const tN=sorted.reduce((s,d)=>s+d.new,0);
 
-  const devList = Object.entries(devMap).sort((a,b)=>b[1].total-a[1].total);
-  const names   = devList.map(d=>d[0]);
-  const totals  = devList.map(d=>d[1].total);
-  const actives = devList.map(d=>d[1].active);
-  const closeds = devList.map(d=>d[1].closed);
-  const news    = devList.map(d=>d[1].new);
-  const devColors = devList.map((_,i)=>COLORS[i%COLORS.length]);
-
-  const totalAll   = devList.reduce((s,d)=>s+d[1].total,0);
-  const totalAct   = devList.reduce((s,d)=>s+d[1].active,0);
-  const totalClo   = devList.reduce((s,d)=>s+d[1].closed,0);
-  const totalNew   = devList.reduce((s,d)=>s+d[1].new,0);
-  const rate       = totalAll ? Math.round(totalClo/totalAll*100) : 0;
-
-  // KPIs
-  document.getElementById("k-total").textContent  = totalAll;
-  document.getElementById("k-active").textContent = totalAct;
-  document.getElementById("k-closed").textContent = totalClo;
-  document.getElementById("k-new").textContent    = totalNew;
-  document.getElementById("k-rate").textContent   = rate+"%";
-
-  // Chart: State donut
-  charts.state = new Chart(document.getElementById("c-state"),{
+  charts.donut=new Chart(document.getElementById("c-donut"),{
     type:"doughnut",
-    data:{labels:["Active","Closed","New"],datasets:[{data:[totalAct,totalClo,totalNew],backgroundColor:["#f59e0b","#10b981","#6366f1"],borderWidth:3,borderColor:"#1e293b"}]},
-    options:{responsive:true,cutout:"65%",plugins:{legend:{position:"bottom",labels:{color:"#94a3b8",padding:16}},tooltip:{callbacks:{label:ctx=>" "+ctx.label+": "+ctx.parsed+" ("+Math.round(ctx.parsed/totalAll*100)+"%)"}}}}
+    data:{labels:["Active","Closed","New"],datasets:[{data:[tA,tC,tN],backgroundColor:["#eda100","#1baf7a","#2a78d6"],borderWidth:3,borderColor:isDark()?"#1a1a19":"#ffffff"}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"68%",plugins:{legend:{display:false}}}
   });
 
-  // Chart: Workload bar
-  charts.workload = new Chart(document.getElementById("c-workload"),{
+  const rates=sorted.map(d=>cr(d));
+  charts.comp=new Chart(document.getElementById("c-comp"),{
     type:"bar",
-    data:{labels:names,datasets:[{label:"Total",data:totals,backgroundColor:devColors,borderRadius:5}]},
-    options:{indexAxis:"y",responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{color:"#94a3b8"}},y:{ticks:{color:"#f1f5f9"}}}}
+    data:{labels:names,datasets:[{data:rates,backgroundColor:rates.map(v=>crColor(v)),borderRadius:3,barThickness:11}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{min:0,max:100,grid:{color:C.grid},ticks:{color:C.tick,callback:v=>v+"%"},border:{display:false}},
+              y:{grid:{display:false},ticks:{color:C.text,font:{size:11}},border:{display:false}}}}
   });
 
-  // Chart: Stacked
-  charts.stacked = new Chart(document.getElementById("c-stacked"),{
+  charts.stack=new Chart(document.getElementById("c-stack"),{
     type:"bar",
     data:{labels:names,datasets:[
-      {label:"Active",data:actives,backgroundColor:"#f59e0b",borderRadius:3},
-      {label:"Closed",data:closeds,backgroundColor:"#10b981",borderRadius:3},
-      {label:"New",   data:news,   backgroundColor:"#6366f1",borderRadius:3},
+      {label:"Active", data:sorted.map(d=>d.active),backgroundColor:"#eda100",borderRadius:2,barThickness:13},
+      {label:"Closed", data:sorted.map(d=>d.closed),backgroundColor:"#1baf7a",borderRadius:2,barThickness:13},
+      {label:"New",    data:sorted.map(d=>d.new),   backgroundColor:"#2a78d6",borderRadius:2,barThickness:13},
     ]},
-    options:{responsive:true,plugins:{legend:{position:"top",labels:{color:"#94a3b8"}}},scales:{x:{stacked:true,ticks:{color:"#94a3b8",maxRotation:30}},y:{stacked:true,beginAtZero:true,ticks:{color:"#94a3b8"}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{color:C.text,font:{size:11},maxRotation:30,autoSkip:false},border:{display:false}},
+              y:{stacked:true,beginAtZero:true,grid:{color:C.grid},ticks:{color:C.tick},border:{display:false}}}}
   });
+}
 
-  // Chart: Completion
-  const compRates = devList.map(d=>d[1].total?Math.round(d[1].closed/d[1].total*100):0);
-  charts.completion = new Chart(document.getElementById("c-completion"),{
-    type:"bar",
-    data:{labels:names,datasets:[{label:"Completion %",data:compRates,backgroundColor:compRates.map(v=>v>=70?"#10b981":v>=40?"#f59e0b":"#ef4444"),borderRadius:5}]},
-    options:{indexAxis:"y",responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:"#94a3b8",callback:v=>v+"%"}},y:{ticks:{color:"#f1f5f9"}}}}
-  });
-
-  // Developer table
-  const tbody = document.getElementById("dev-tbody");
+function buildTable(sorted,maxT){
+  const tbody=document.getElementById("dev-tbody");
   tbody.innerHTML="";
-  const maxTotal = totals[0]||1;
-  devList.forEach(([name,info],i)=>{
-    const color = COLORS[i%COLORS.length];
-    const cr = info.total?Math.round(info.closed/info.total*100):0;
-    const crClass = cr>=70?"green":cr>=40?"amber":"red";
-    const barW = Math.round(info.total/maxTotal*100);
+  sorted.forEach(d=>{
+    const rate=cr(d);
+    const bw=Math.round(d.total/maxT*100);
     tbody.innerHTML+=`<tr>
-      <td><span class="avatar" style="background:${color}">${name[0]}</span>${name}</td>
-      <td><strong>${info.total}</strong></td>
-      <td style="color:var(--amber);font-weight:600">${info.active}</td>
-      <td style="color:var(--green);font-weight:600">${info.closed}</td>
-      <td style="color:var(--blue);font-weight:600">${info.new}</td>
-      <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${barW}%;background:${color}"></div></div>${info.total}</div></td>
-      <td><span class="badge ${crClass}">${cr}%</span></td>
+      <td><div class="dev-cell"><div class="avatar" style="background:${d.color}">${d.name[0]}</div>${d.name}</div></td>
+      <td>${d.total}</td>
+      <td class="num amber">${d.active}</td>
+      <td class="num green">${d.closed}</td>
+      <td class="num blue">${d.new}</td>
+      <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${bw}%;background:${d.color}"></div></div><span style="font-size:11px;color:var(--muted)">${d.total}</span></div></td>
+      <td><span class="pill ${crClass(rate)}">${rate}%</span></td>
     </tr>`;
   });
+}
 
-  // Developer cards
-  const dc = document.getElementById("dev-cards");
+function buildCards(sorted){
+  const dc=document.getElementById("dev-cards");
   dc.innerHTML="";
-  devList.forEach(([name,info],i)=>{
-    const color = COLORS[i%COLORS.length];
-    const cr = info.total?Math.round(info.closed/info.total*100):0;
-    const crColor = cr>=70?"#10b981":cr>=40?"#f59e0b":"#ef4444";
-    dc.innerHTML+=`
-    <div class="dev-card">
-      <div class="dev-card-head">
-        <div class="avatar" style="background:${color};width:44px;height:44px;font-size:1rem">${name[0]}</div>
-        <div><div class="dev-card-name">${name}</div><div class="dev-card-sub">${info.total} total work items</div></div>
+  sorted.forEach(d=>{
+    const rate=cr(d);
+    const cc=crColor(rate);
+    dc.innerHTML+=`<div class="dev-card">
+      <div class="dev-top">
+        <div class="avatar" style="background:${d.color};width:30px;height:30px;font-size:12px">${d.name[0]}</div>
+        <div class="dev-name">${shortName(d.name)}</div>
       </div>
-      <div class="dev-stat-row">
-        <div class="dev-stat a"><div class="n">${info.active}</div><div class="l">Active</div></div>
-        <div class="dev-stat c"><div class="n">${info.closed}</div><div class="l">Closed</div></div>
-        <div class="dev-stat nw"><div class="n">${info.new}</div><div class="l">New</div></div>
+      <div class="dev-mini-stats">
+        <div class="mini-stat"><div class="mini-n a">${d.active}</div><div class="mini-l">Active</div></div>
+        <div class="mini-stat"><div class="mini-n c">${d.closed}</div><div class="mini-l">Closed</div></div>
+        <div class="mini-stat"><div class="mini-n nw">${d.new}</div><div class="mini-l">New</div></div>
       </div>
-      <div class="prog"><div class="prog-fill" style="width:${cr}%;background:${crColor}"></div></div>
-      <div class="prog-label"><span>Completion Rate</span><span style="color:${crColor};font-weight:700">${cr}%</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${rate}%;background:${cc}"></div></div>
+      <div class="prog-label"><span>Completion</span><span style="color:${cc};font-weight:500">${rate}%</span></div>
     </div>`;
   });
 }
 
-// Init
-updateDate();
-setInterval(updateDate, 60000);
-renderAll(SEED); // Show seed data immediately
+function toggleMode(){
+  document.documentElement.dataset.mode=isDark()?"":"dark";
+  const sorted=[...DEVS].sort((a,b)=>b.total-a.total);
+  buildCharts(sorted);
+}
 
-// Auto-load if PAT exists
-const saved = getPAT();
-if(saved){ document.getElementById("pat-input").value=saved; fetchLive(); }
-else { openModal(); }
+if(window.matchMedia("(prefers-color-scheme:dark)").matches){
+  document.documentElement.dataset.mode="dark";
+}
+
+renderAll();
+
+const saved=getPAT();
+if(saved){document.getElementById("pat-input").value=saved;fetchLive();}
+else{openModal();}
 </script>
 </body>
 </html>

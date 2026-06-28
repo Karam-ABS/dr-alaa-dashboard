@@ -9,200 +9,235 @@
 :root{
 --bg:#f8f7f4;--s1:#ffffff;--s2:#f1f0ec;
 --text:#0b0b0b;--muted:#898781;--sub:#52514e;
---border:rgba(11,11,11,0.1);--border-strong:rgba(11,11,11,0.18);
+--border:rgba(11,11,11,0.1);--border-strong:rgba(11,11,11,0.2);
 --blue:#2a78d6;--green:#1baf7a;--amber:#eda100;--red:#e34948;--violet:#4a3aa7;
 }
 [data-mode=dark]{
 --bg:#111110;--s1:#1a1a19;--s2:#222221;
 --text:#ffffff;--muted:#898781;--sub:#c3c2b7;
---border:rgba(255,255,255,0.1);--border-strong:rgba(255,255,255,0.18);
---blue:#3987e5;--green:#199e70;--amber:#c98500;--red:#e66767;--violet:#9085e9;
+--border:rgba(255,255,255,0.1);--border-strong:rgba(255,255,255,0.2);
+--blue:#3987e5;--green:#199e70;--amber:#c98500;--red:#e66767;
 }
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;min-height:100vh;}
+html,body{height:100%;overflow-y:auto;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;}
 
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:0.5px solid var(--border);background:var(--s1);position:sticky;top:0;z-index:100;}
-.topbar-title{font-size:15px;font-weight:500;letter-spacing:-0.01em;}
-.topbar-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+/* TOP BAR */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 32px;border-bottom:0.5px solid var(--border);
+  background:var(--s1);position:sticky;top:0;z-index:50;
+}
+.topbar-left .title{font-size:16px;font-weight:500;letter-spacing:-0.01em;}
+.topbar-left .sub{font-size:12px;color:var(--muted);margin-top:3px;}
 .topbar-right{display:flex;align-items:center;gap:10px;}
-.mode-btn{padding:5px 14px;border:0.5px solid var(--border-strong);border-radius:6px;background:transparent;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;}
-.mode-btn:hover{background:var(--s2);}
-.refresh-btn{padding:5px 14px;border:0.5px solid var(--border-strong);border-radius:6px;background:transparent;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;}
-.refresh-btn:hover{background:var(--s2);}
-.live-label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.btn{padding:6px 14px;border:0.5px solid var(--border-strong);border-radius:6px;background:transparent;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;}
+.btn:hover{background:var(--s2);}
+.live{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
 
-.page{padding:22px 28px;display:flex;flex-direction:column;gap:18px;}
+/* PAGE */
+.page{max-width:1300px;margin:0 auto;padding:32px;}
+.gap{display:flex;flex-direction:column;gap:32px;}
 
-.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
-.kpi{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;padding:16px 18px;}
-.kpi-label{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;}
-.kpi-val{font-size:28px;font-weight:500;letter-spacing:-0.02em;line-height:1;}
-.kpi-sub{font-size:11px;color:var(--muted);margin-top:5px;}
-.kpi-val.amber{color:var(--amber);}
-.kpi-val.green{color:var(--green);}
-.kpi-val.blue{color:var(--blue);}
+/* SECTION */
+.section-label{font-size:11px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
 
-.section-label{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;}
+.kpi{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;padding:20px 18px;}
+.kpi .label{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:10px;}
+.kpi .val{font-size:32px;font-weight:500;letter-spacing:-0.02em;line-height:1;}
+.kpi .hint{font-size:11px;color:var(--muted);margin-top:6px;}
+.val.amber{color:var(--amber);}
+.val.green{color:var(--green);}
+.val.blue{color:var(--blue);}
 
-.charts-row{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:12px;}
-.card{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;padding:20px;}
-.card-title{font-size:13px;font-weight:500;margin-bottom:3px;}
-.card-sub{font-size:11px;color:var(--muted);margin-bottom:16px;}
+/* CHARTS */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.card{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;padding:22px;}
+.card .ctitle{font-size:13px;font-weight:500;margin-bottom:3px;}
+.card .csub{font-size:11px;color:var(--muted);margin-bottom:18px;}
 .chart-wrap{position:relative;width:100%;}
-.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;}
+.legend{display:flex;gap:14px;margin-top:14px;flex-wrap:wrap;}
 .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub);}
-.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.legend-sq{width:8px;height:8px;border-radius:2px;}
 
-.table-card{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
+/* TABLE */
+.table-wrap{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
 table{width:100%;border-collapse:collapse;}
-th{padding:10px 20px;text-align:left;font-size:11px;font-weight:500;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;border-bottom:0.5px solid var(--border);background:var(--s2);}
-td{padding:11px 20px;border-bottom:0.5px solid var(--border);font-size:13px;vertical-align:middle;}
+th{padding:11px 20px;text-align:left;font-size:11px;font-weight:500;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;border-bottom:0.5px solid var(--border);background:var(--s2);}
+td{padding:13px 20px;border-bottom:0.5px solid var(--border);font-size:13px;vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:var(--s2);}
 .dev-cell{display:flex;align-items:center;gap:10px;}
-.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0;}
+.av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;}
 .bar-wrap{display:flex;align-items:center;gap:8px;}
-.bar-bg{width:80px;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;border:0.5px solid var(--border);}
+.bar-bg{width:90px;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;}
 .bar-fill{height:100%;border-radius:3px;}
-.pill{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:500;}
-.pill.green{background:rgba(27,175,122,0.12);color:var(--green);}
-.pill.amber{background:rgba(237,161,0,0.12);color:var(--amber);}
-.pill.red{background:rgba(227,73,72,0.12);color:var(--red);}
-.num.amber{color:var(--amber);font-weight:500;}
-.num.green{color:var(--green);font-weight:500;}
-.num.blue{color:var(--blue);font-weight:500;}
+.pill{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:500;}
+.pill.g{background:rgba(27,175,122,0.12);color:var(--green);}
+.pill.a{background:rgba(237,161,0,0.12);color:var(--amber);}
+.pill.r{background:rgba(227,73,72,0.12);color:var(--red);}
+.c-amber{color:var(--amber);font-weight:500;}
+.c-green{color:var(--green);font-weight:500;}
+.c-blue{color:var(--blue);font-weight:500;}
 
-.dev-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
-.dev-card{background:var(--s1);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;}
-.dev-top{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
-.dev-name{font-size:12px;font-weight:500;}
-.dev-mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;}
-.mini-stat{background:var(--s2);border-radius:6px;padding:8px 4px;text-align:center;}
-.mini-n{font-size:16px;font-weight:500;line-height:1;}
-.mini-l{font-size:10px;color:var(--muted);margin-top:2px;}
-.mini-n.a{color:var(--amber);}
-.mini-n.c{color:var(--green);}
-.mini-n.nw{color:var(--blue);}
-.prog-bar{height:4px;background:var(--s2);border-radius:2px;overflow:hidden;margin-top:8px;}
-.prog-fill{height:100%;border-radius:2px;}
-.prog-label{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px;}
+/* DEV CARDS */
+.dev-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+.dev-card{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;padding:18px;}
+.dev-card-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.dev-card-name{font-size:13px;font-weight:500;}
+.dev-card-total{font-size:11px;color:var(--muted);margin-top:1px;}
+.mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.mini{background:var(--s2);border-radius:8px;padding:10px 6px;text-align:center;}
+.mini-n{font-size:18px;font-weight:500;line-height:1;}
+.mini-l{font-size:10px;color:var(--muted);margin-top:3px;}
+.mini-n.am{color:var(--amber);}
+.mini-n.gn{color:var(--green);}
+.mini-n.bl{color:var(--blue);}
+.prog{height:5px;background:var(--s2);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;}
+.prog-label{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:5px;}
 
-/* PAT MODAL */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;}
+/* FOOTER */
+.footer{text-align:center;font-size:11px;color:var(--muted);padding:24px 0 32px;border-top:0.5px solid var(--border);}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;align-items:center;justify-content:center;}
 .overlay.open{display:flex;}
-.modal{background:var(--s1);border:0.5px solid var(--border-strong);border-radius:14px;padding:32px;width:100%;max-width:400px;}
-.modal h2{font-size:16px;font-weight:500;margin-bottom:6px;}
-.modal p{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
-.modal input{width:100%;padding:10px 14px;background:var(--s2);border:0.5px solid var(--border-strong);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:12px;outline:none;font-family:inherit;}
+.modal{background:var(--s1);border:0.5px solid var(--border-strong);border-radius:14px;padding:36px;width:420px;max-width:90vw;}
+.modal h2{font-size:17px;font-weight:500;margin-bottom:8px;}
+.modal p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:22px;}
+.modal input{width:100%;padding:11px 14px;background:var(--s2);border:0.5px solid var(--border-strong);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:12px;outline:none;font-family:inherit;}
 .modal input:focus{border-color:var(--blue);}
-.modal-btn{width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;}
-.modal-btn:hover{opacity:0.9;}
-.modal-skip{width:100%;padding:8px;background:transparent;color:var(--muted);border:none;font-size:12px;cursor:pointer;margin-top:6px;font-family:inherit;}
-.modal-skip:hover{color:var(--text);}
+.mbtn{width:100%;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;}
+.mskip{width:100%;padding:8px;background:transparent;color:var(--muted);border:none;font-size:12px;cursor:pointer;margin-top:8px;font-family:inherit;}
+.mskip:hover{color:var(--text);}
 
 /* LOADING */
-.loading{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+.loading{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
 .loading.show{display:flex;}
-.spinner{width:32px;height:32px;border:2.5px solid rgba(255,255,255,0.15);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;}
+.spinner{width:34px;height:34px;border:2.5px solid rgba(255,255,255,0.15);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
-.load-txt{color:rgba(255,255,255,0.7);font-size:13px;}
+.load-txt{color:rgba(255,255,255,0.6);font-size:13px;}
+
+@media(max-width:1100px){
+  .kpi-grid{grid-template-columns:repeat(3,1fr);}
+  .charts-grid{grid-template-columns:1fr 1fr;}
+  .dev-cards{grid-template-columns:repeat(3,1fr);}
+}
+@media(max-width:700px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .charts-grid{grid-template-columns:1fr;}
+  .dev-cards{grid-template-columns:repeat(2,1fr);}
+}
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
 <div class="loading" id="loading">
   <div class="spinner"></div>
   <div class="load-txt" id="load-txt">Fetching live data...</div>
 </div>
 
-<!-- PAT MODAL -->
 <div class="overlay" id="overlay">
   <div class="modal">
     <h2>Connect to Azure DevOps</h2>
     <p>Enter your Personal Access Token to load live data. It stays in your browser session only and is never stored elsewhere.</p>
     <input type="password" id="pat-input" placeholder="Paste your PAT here..."/>
-    <button class="modal-btn" onclick="savePATAndLoad()">Load live dashboard</button>
-    <button class="modal-skip" onclick="closeModal()">Continue with cached data</button>
+    <button class="mbtn" onclick="savePATAndLoad()">Load live dashboard</button>
+    <button class="mskip" onclick="closeModal()">Continue with cached data</button>
   </div>
 </div>
 
-<!-- TOP BAR -->
 <div class="topbar">
-  <div>
-    <div class="topbar-title">ABS-Central — Development Intelligence</div>
-    <div class="topbar-sub" id="ts">Showing cached data</div>
+  <div class="topbar-left">
+    <div class="title">ABS-Central — Development Intelligence</div>
+    <div class="sub" id="ts">Showing cached data</div>
   </div>
   <div class="topbar-right">
-    <div class="live-label"><span class="live-dot"></span>Live</div>
-    <button class="refresh-btn" onclick="fetchLive()">Refresh</button>
-    <button class="mode-btn" onclick="toggleMode()">Toggle mode</button>
+    <div class="live"><span class="live-dot"></span>Live</div>
+    <button class="btn" onclick="fetchLive()">Refresh data</button>
+    <button class="btn" onclick="toggleMode()">Toggle mode</button>
   </div>
 </div>
 
-<!-- PAGE -->
 <div class="page">
+<div class="gap">
 
-  <div class="kpi-row">
-    <div class="kpi"><div class="kpi-label">Total items</div><div class="kpi-val" id="k-total">200</div><div class="kpi-sub">All developers</div></div>
-    <div class="kpi"><div class="kpi-label">Active</div><div class="kpi-val amber" id="k-active">147</div><div class="kpi-sub">In progress</div></div>
-    <div class="kpi"><div class="kpi-label">Closed</div><div class="kpi-val green" id="k-closed">43</div><div class="kpi-sub">Completed</div></div>
-    <div class="kpi"><div class="kpi-label">New / Backlog</div><div class="kpi-val blue" id="k-new">8</div><div class="kpi-sub">Not started</div></div>
-    <div class="kpi"><div class="kpi-label">Completion rate</div><div class="kpi-val green" id="k-rate">22%</div><div class="kpi-sub">Closed ÷ total</div></div>
-    <div class="kpi"><div class="kpi-label">Developers</div><div class="kpi-val" id="k-devs">10</div><div class="kpi-sub">Active contributors</div></div>
+  <!-- KPIs -->
+  <div>
+    <div class="section-label">Executive summary</div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="label">Total items</div><div class="val" id="k-total">200</div><div class="hint">All developers</div></div>
+      <div class="kpi"><div class="label">Active</div><div class="val amber" id="k-active">147</div><div class="hint">In progress</div></div>
+      <div class="kpi"><div class="label">Closed</div><div class="val green" id="k-closed">43</div><div class="hint">Completed</div></div>
+      <div class="kpi"><div class="label">New / Backlog</div><div class="val blue" id="k-new">8</div><div class="hint">Not started</div></div>
+      <div class="kpi"><div class="label">Completion rate</div><div class="val green" id="k-rate">22%</div><div class="hint">Closed ÷ total</div></div>
+      <div class="kpi"><div class="label">Developers</div><div class="val" id="k-devs">10</div><div class="hint">Active contributors</div></div>
+    </div>
   </div>
 
-  <div class="section-label">Team overview</div>
-
-  <div class="charts-row">
-    <div class="card">
-      <div class="card-title">State distribution</div>
-      <div class="card-sub">All work items</div>
-      <div class="chart-wrap" style="height:180px"><canvas id="c-donut" role="img" aria-label="Donut chart showing state distribution">147 active, 43 closed, 8 new.</canvas></div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#eda100"></div>Active — <span id="l-active">147</span></div>
-        <div class="legend-item"><div class="legend-dot" style="background:#1baf7a"></div>Closed — <span id="l-closed">43</span></div>
-        <div class="legend-item"><div class="legend-dot" style="background:#2a78d6"></div>New — <span id="l-new">8</span></div>
+  <!-- CHARTS -->
+  <div>
+    <div class="section-label">Team overview</div>
+    <div class="charts-grid">
+      <div class="card">
+        <div class="ctitle">State distribution</div>
+        <div class="csub">All work items</div>
+        <div class="chart-wrap" style="height:220px"><canvas id="c-donut" role="img" aria-label="Donut chart showing work item state distribution">Active, closed, and new work items.</canvas></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-sq" style="background:#eda100"></div>Active — <span id="l-active">147</span></div>
+          <div class="legend-item"><div class="legend-sq" style="background:#1baf7a"></div>Closed — <span id="l-closed">43</span></div>
+          <div class="legend-item"><div class="legend-sq" style="background:#2a78d6"></div>New — <span id="l-new">8</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctitle">Completion rate per developer</div>
+        <div class="csub">Closed ÷ total (%)</div>
+        <div class="chart-wrap" style="height:260px"><canvas id="c-comp" role="img" aria-label="Horizontal bar chart of completion rate per developer">Completion rates per developer.</canvas></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">Workload breakdown</div>
+        <div class="csub">Active · Closed · New per developer</div>
+        <div class="chart-wrap" style="height:260px"><canvas id="c-stack" role="img" aria-label="Stacked bar chart of work items per developer by state">Work items stacked by state per developer.</canvas></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-sq" style="background:#eda100"></div>Active</div>
+          <div class="legend-item"><div class="legend-sq" style="background:#1baf7a"></div>Closed</div>
+          <div class="legend-item"><div class="legend-sq" style="background:#2a78d6"></div>New</div>
+        </div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-title">Completion rate per developer</div>
-      <div class="card-sub">Closed ÷ total (%)</div>
-      <div class="chart-wrap" style="height:210px"><canvas id="c-comp" role="img" aria-label="Horizontal bar chart of completion rate per developer">Completion rates per developer.</canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Workload breakdown</div>
-      <div class="card-sub">Active · Closed · New per developer</div>
-      <div class="chart-wrap" style="height:210px"><canvas id="c-stack" role="img" aria-label="Stacked bar chart of work items per developer">Work items per developer by state.</canvas></div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#eda100"></div>Active</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#1baf7a"></div>Closed</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#2a78d6"></div>New</div>
-      </div>
+  </div>
+
+  <!-- TABLE -->
+  <div>
+    <div class="section-label">Developer summary</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Developer</th><th>Total</th><th>Active</th><th>Closed</th><th>New</th><th>Workload</th><th>Completion</th>
+        </tr></thead>
+        <tbody id="dev-tbody"></tbody>
+      </table>
     </div>
   </div>
 
-  <div class="section-label">Developer summary</div>
-
-  <div class="table-card">
-    <table>
-      <thead><tr>
-        <th>Developer</th><th>Total</th><th>Active</th><th>Closed</th><th>New</th><th>Workload</th><th>Completion</th>
-      </tr></thead>
-      <tbody id="dev-tbody"></tbody>
-    </table>
+  <!-- DEV CARDS -->
+  <div>
+    <div class="section-label">Individual breakdown</div>
+    <div class="dev-cards" id="dev-cards"></div>
   </div>
 
-  <div class="section-label">Individual breakdown</div>
-  <div class="dev-row" id="dev-cards"></div>
+  <div class="footer" id="footer">ABS-Central · Dr. Alaa Overview · Development Intelligence Dashboard</div>
 
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-const ORG="ADVBUSSOL", PROJECT="ABS-Central";
-
+const ORG="ADVBUSSOL",PROJECT="ABS-Central";
 const SEED=[
   {name:"Anas Al Tobasi",      active:40,closed:8, new:1, color:"#2a78d6"},
   {name:"Hamzah Lababidi",     active:19,closed:11,new:2, color:"#1baf7a"},
@@ -216,21 +251,24 @@ const SEED=[
   {name:"Jamal Nofal",         active:2, closed:1, new:0, color:"#eb6834"},
 ].map(d=>({...d,total:d.active+d.closed+d.new}));
 
+const COLORS=["#2a78d6","#1baf7a","#eda100","#4a3aa7","#e34948","#199e70","#c98500","#3987e5","#e87ba4","#eb6834"];
 let DEVS=[...SEED];
 let charts={};
 
-function getPAT(){return sessionStorage.getItem("ado_pat")||"";}
-function auth(p){return "Basic "+btoa(":"+p);}
-function cr(d){return d.total?Math.round(d.closed/d.total*100):0;}
-function crColor(v){return v>=70?"#1baf7a":v>=40?"#eda100":"#e34948";}
-function crClass(v){return v>=70?"green":v>=40?"amber":"red";}
-function shortName(n){return n.split(" ")[0];}
+const getPAT=()=>sessionStorage.getItem("ado_pat")||"";
+const auth=p=>"Basic "+btoa(":"+p);
+const cr=d=>d.total?Math.round(d.closed/d.total*100):0;
+const crColor=v=>v>=70?"#1baf7a":v>=40?"#eda100":"#e34948";
+const crClass=v=>v>=70?"g":v>=40?"a":"r";
+const short=n=>n.split(" ")[0];
+const isDark=()=>document.documentElement.dataset.mode==="dark";
+const getC=()=>isDark()?{grid:"#2c2c2a",tick:"#898781",text:"#c3c2b7"}:{grid:"#e1e0d9",tick:"#898781",text:"#52514e"};
 
-function isDark(){return document.documentElement.dataset.mode==="dark";}
-function getC(){return isDark()?{grid:"#2c2c2a",tick:"#898781",text:"#c3c2b7"}:{grid:"#e1e0d9",tick:"#898781",text:"#52514e"};}
+const openModal=()=>document.getElementById("overlay").classList.add("open");
+const closeModal=()=>document.getElementById("overlay").classList.remove("open");
+const showLoad=t=>{document.getElementById("loading").classList.add("show");document.getElementById("load-txt").textContent=t;};
+const hideLoad=()=>document.getElementById("loading").classList.remove("show");
 
-function openModal(){document.getElementById("overlay").classList.add("open");}
-function closeModal(){document.getElementById("overlay").classList.remove("open");}
 function savePATAndLoad(){
   const p=document.getElementById("pat-input").value.trim();
   if(!p)return;
@@ -238,9 +276,6 @@ function savePATAndLoad(){
   closeModal();
   fetchLive();
 }
-
-function showLoad(t){document.getElementById("loading").classList.add("show");document.getElementById("load-txt").textContent=t;}
-function hideLoad(){document.getElementById("loading").classList.remove("show");}
 
 async function fetchLive(){
   const pat=getPAT();
@@ -255,23 +290,21 @@ async function fetchLive(){
     const ids=(wj.workItems||[]).map(w=>w.id);
     if(!ids.length){hideLoad();return;}
     showLoad(`Loading ${ids.length} items...`);
-    const fields=["System.Id","System.State","System.AssignedTo","System.WorkItemType"];
     let all=[];
     for(let i=0;i<ids.length;i+=200){
-      const chunk=ids.slice(i,i+200);
       const br=await fetch(`https://dev.azure.com/${ORG}/${PROJECT}/_apis/wit/workitemsbatch?api-version=7.1`,
-        {method:"POST",headers:{"Authorization":auth(pat),"Content-Type":"application/json"},body:JSON.stringify({ids:chunk,fields})});
+        {method:"POST",headers:{"Authorization":auth(pat),"Content-Type":"application/json"},
+         body:JSON.stringify({ids:ids.slice(i,i+200),fields:["System.Id","System.State","System.AssignedTo"]})});
       if(!br.ok)throw new Error("Batch "+br.status);
       const bj=await br.json();
       all=all.concat(bj.value||[]);
     }
     const map={};
     all.forEach(wi=>{
-      const f=wi.fields;
-      const a=f["System.AssignedTo"];
+      const a=wi.fields["System.AssignedTo"];
       if(!a)return;
       const name=a.displayName.replace(" ABS","").trim();
-      const state=f["System.State"]||"";
+      const state=wi.fields["System.State"]||"";
       if(!map[name])map[name]={name,active:0,closed:0,new:0,total:0,color:"#2a78d6"};
       map[name].total++;
       if(state==="Active")map[name].active++;
@@ -279,16 +312,16 @@ async function fetchLive(){
       else if(state==="New")map[name].new++;
     });
     DEVS=Object.values(map).sort((a,b)=>b.total-a.total);
-    const colors=["#2a78d6","#1baf7a","#eda100","#4a3aa7","#e34948","#199e70","#c98500","#3987e5","#e87ba4","#eb6834"];
-    DEVS.forEach((d,i)=>d.color=colors[i%colors.length]);
+    DEVS.forEach((d,i)=>d.color=COLORS[i%COLORS.length]);
     renderAll();
     hideLoad();
     const now=new Date();
-    document.getElementById("ts").textContent=`Live data · ${now.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})} · ${now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})} · ${all.length} items`;
+    document.getElementById("ts").textContent=`Live · ${now.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})} · ${now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})} · ${all.length} items`;
+    document.getElementById("footer").textContent=`ABS-Central · Dr. Alaa Overview · Last updated ${now.toLocaleString()}`;
   }catch(e){
     hideLoad();
     alert("Could not fetch live data: "+e.message+"\n\nShowing cached data.");
-    DEVS=[...SEED];
+    DEVS=[...SEED].map(d=>({...d}));
     renderAll();
   }
 }
@@ -311,44 +344,41 @@ function renderAll(){
   document.getElementById("l-closed").textContent=tC;
   document.getElementById("l-new").textContent=tN;
 
-  buildCharts(sorted);
+  buildCharts(sorted,tA,tC,tN);
   buildTable(sorted,maxT);
   buildCards(sorted);
 }
 
-function buildCharts(sorted){
+function buildCharts(sorted,tA,tC,tN){
   Object.values(charts).forEach(c=>c.destroy());
   charts={};
   const C=getC();
-  const names=sorted.map(d=>shortName(d.name));
-  const tA=sorted.reduce((s,d)=>s+d.active,0);
-  const tC=sorted.reduce((s,d)=>s+d.closed,0);
-  const tN=sorted.reduce((s,d)=>s+d.new,0);
+  const names=sorted.map(d=>short(d.name));
 
   charts.donut=new Chart(document.getElementById("c-donut"),{
     type:"doughnut",
-    data:{labels:["Active","Closed","New"],datasets:[{data:[tA,tC,tN],backgroundColor:["#eda100","#1baf7a","#2a78d6"],borderWidth:3,borderColor:isDark()?"#1a1a19":"#ffffff"}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:"68%",plugins:{legend:{display:false}}}
+    data:{labels:["Active","Closed","New"],datasets:[{data:[tA,tC,tN],backgroundColor:["#eda100","#1baf7a","#2a78d6"],borderWidth:4,borderColor:isDark()?"#1a1a19":"#ffffff"}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"70%",plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>" "+ctx.label+": "+ctx.parsed}}}}
   });
 
   const rates=sorted.map(d=>cr(d));
   charts.comp=new Chart(document.getElementById("c-comp"),{
     type:"bar",
-    data:{labels:names,datasets:[{data:rates,backgroundColor:rates.map(v=>crColor(v)),borderRadius:3,barThickness:11}]},
+    data:{labels:names,datasets:[{data:rates,backgroundColor:rates.map(v=>crColor(v)),borderRadius:4,barThickness:14}]},
     options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{x:{min:0,max:100,grid:{color:C.grid},ticks:{color:C.tick,callback:v=>v+"%"},border:{display:false}},
-              y:{grid:{display:false},ticks:{color:C.text,font:{size:11}},border:{display:false}}}}
+              y:{grid:{display:false},ticks:{color:C.text,font:{size:12}},border:{display:false}}}}
   });
 
   charts.stack=new Chart(document.getElementById("c-stack"),{
     type:"bar",
     data:{labels:names,datasets:[
-      {label:"Active", data:sorted.map(d=>d.active),backgroundColor:"#eda100",borderRadius:2,barThickness:13},
-      {label:"Closed", data:sorted.map(d=>d.closed),backgroundColor:"#1baf7a",borderRadius:2,barThickness:13},
-      {label:"New",    data:sorted.map(d=>d.new),   backgroundColor:"#2a78d6",borderRadius:2,barThickness:13},
+      {label:"Active",data:sorted.map(d=>d.active),backgroundColor:"#eda100",borderRadius:3,barThickness:16},
+      {label:"Closed",data:sorted.map(d=>d.closed),backgroundColor:"#1baf7a",borderRadius:3,barThickness:16},
+      {label:"New",   data:sorted.map(d=>d.new),   backgroundColor:"#2a78d6",borderRadius:3,barThickness:16},
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{x:{stacked:true,grid:{display:false},ticks:{color:C.text,font:{size:11},maxRotation:30,autoSkip:false},border:{display:false}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{color:C.text,font:{size:12},maxRotation:30,autoSkip:false},border:{display:false}},
               y:{stacked:true,beginAtZero:true,grid:{color:C.grid},ticks:{color:C.tick},border:{display:false}}}}
   });
 }
@@ -360,11 +390,11 @@ function buildTable(sorted,maxT){
     const rate=cr(d);
     const bw=Math.round(d.total/maxT*100);
     tbody.innerHTML+=`<tr>
-      <td><div class="dev-cell"><div class="avatar" style="background:${d.color}">${d.name[0]}</div>${d.name}</div></td>
-      <td>${d.total}</td>
-      <td class="num amber">${d.active}</td>
-      <td class="num green">${d.closed}</td>
-      <td class="num blue">${d.new}</td>
+      <td><div class="dev-cell"><div class="av" style="background:${d.color}">${d.name[0]}</div>${d.name}</div></td>
+      <td><strong>${d.total}</strong></td>
+      <td class="c-amber">${d.active}</td>
+      <td class="c-green">${d.closed}</td>
+      <td class="c-blue">${d.new}</td>
       <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${bw}%;background:${d.color}"></div></div><span style="font-size:11px;color:var(--muted)">${d.total}</span></div></td>
       <td><span class="pill ${crClass(rate)}">${rate}%</span></td>
     </tr>`;
@@ -378,16 +408,16 @@ function buildCards(sorted){
     const rate=cr(d);
     const cc=crColor(rate);
     dc.innerHTML+=`<div class="dev-card">
-      <div class="dev-top">
-        <div class="avatar" style="background:${d.color};width:30px;height:30px;font-size:12px">${d.name[0]}</div>
-        <div class="dev-name">${shortName(d.name)}</div>
+      <div class="dev-card-head">
+        <div class="av" style="background:${d.color};width:36px;height:36px;font-size:13px;flex-shrink:0">${d.name[0]}</div>
+        <div><div class="dev-card-name">${short(d.name)}</div><div class="dev-card-total">${d.total} items</div></div>
       </div>
-      <div class="dev-mini-stats">
-        <div class="mini-stat"><div class="mini-n a">${d.active}</div><div class="mini-l">Active</div></div>
-        <div class="mini-stat"><div class="mini-n c">${d.closed}</div><div class="mini-l">Closed</div></div>
-        <div class="mini-stat"><div class="mini-n nw">${d.new}</div><div class="mini-l">New</div></div>
+      <div class="mini-grid">
+        <div class="mini"><div class="mini-n am">${d.active}</div><div class="mini-l">Active</div></div>
+        <div class="mini"><div class="mini-n gn">${d.closed}</div><div class="mini-l">Closed</div></div>
+        <div class="mini"><div class="mini-n bl">${d.new}</div><div class="mini-l">New</div></div>
       </div>
-      <div class="prog-bar"><div class="prog-fill" style="width:${rate}%;background:${cc}"></div></div>
+      <div class="prog"><div class="prog-fill" style="width:${rate}%;background:${cc}"></div></div>
       <div class="prog-label"><span>Completion</span><span style="color:${cc};font-weight:500">${rate}%</span></div>
     </div>`;
   });
@@ -396,7 +426,10 @@ function buildCards(sorted){
 function toggleMode(){
   document.documentElement.dataset.mode=isDark()?"":"dark";
   const sorted=[...DEVS].sort((a,b)=>b.total-a.total);
-  buildCharts(sorted);
+  const tA=sorted.reduce((s,d)=>s+d.active,0);
+  const tC=sorted.reduce((s,d)=>s+d.closed,0);
+  const tN=sorted.reduce((s,d)=>s+d.new,0);
+  buildCharts(sorted,tA,tC,tN);
 }
 
 if(window.matchMedia("(prefers-color-scheme:dark)").matches){
@@ -404,7 +437,6 @@ if(window.matchMedia("(prefers-color-scheme:dark)").matches){
 }
 
 renderAll();
-
 const saved=getPAT();
 if(saved){document.getElementById("pat-input").value=saved;fetchLive();}
 else{openModal();}

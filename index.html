@@ -3,520 +3,407 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Dr. Alaa — Work Item Dashboard</title>
+<title>Dr. Alaa — ABS Development Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  :root {
-    --bg: #0f172a; --surface: #1e293b; --surface2: #273449;
-    --border: #334155; --text: #f1f5f9; --muted: #94a3b8;
-    --green: #10b981; --amber: #f59e0b; --red: #ef4444;
-    --blue: #6366f1; --pink: #ec4899;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+:root {
+  --bg:#0f172a; --s1:#1e293b; --s2:#273449; --border:#334155;
+  --text:#f1f5f9; --muted:#94a3b8;
+  --green:#10b981; --amber:#f59e0b; --red:#ef4444; --blue:#6366f1; --pink:#ec4899; --cyan:#14b8a6;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
-  /* CONFIG SCREEN */
-  #config-screen {
-    display: flex; align-items: center; justify-content: center;
-    min-height: 100vh; padding: 24px;
-  }
-  .config-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 16px; padding: 40px; width: 100%; max-width: 480px;
-  }
-  .config-box h1 { font-size: 1.5rem; margin-bottom: 6px; }
-  .config-box p { color: var(--muted); font-size: 0.9rem; margin-bottom: 28px; }
-  .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-  .field input {
-    width: 100%; padding: 10px 14px; background: var(--surface2);
-    border: 1px solid var(--border); border-radius: 8px;
-    color: var(--text); font-size: 0.9rem; outline: none;
-  }
-  .field input:focus { border-color: var(--blue); }
-  .btn {
-    width: 100%; padding: 12px; background: var(--blue); color: #fff;
-    border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
-    cursor: pointer; margin-top: 8px;
-  }
-  .btn:hover { opacity: 0.9; }
-  .error { color: var(--red); font-size: 0.85rem; margin-top: 10px; display: none; }
+/* NAV */
+.nav{background:var(--s1);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+.nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1rem;}
+.nav-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-date{color:var(--muted);font-size:0.8rem;}
+.pat-btn{padding:6px 14px;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:0.8rem;}
+.pat-btn:hover{border-color:var(--blue);}
 
-  /* DASHBOARD */
-  #dashboard { display: none; padding: 20px; }
-  .top-bar {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
-  }
-  .top-bar h1 { font-size: 1.4rem; font-weight: 700; }
-  .top-bar .meta { color: var(--muted); font-size: 0.8rem; }
-  .refresh-btn {
-    padding: 8px 18px; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; color: var(--text); cursor: pointer; font-size: 0.85rem;
-  }
-  .refresh-btn:hover { border-color: var(--blue); }
+/* MAIN */
+.main{padding:24px;max-width:1400px;margin:0 auto;}
 
-  /* KPI */
-  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 24px; }
-  .kpi {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 18px; text-align: center;
-  }
-  .kpi .icon { font-size: 1.4rem; margin-bottom: 6px; }
-  .kpi .num { font-size: 1.8rem; font-weight: 800; }
-  .kpi .label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
-  .kpi.green { border-color: var(--green); }
-  .kpi.amber { border-color: var(--amber); }
-  .kpi.blue  { border-color: var(--blue); }
-  .kpi.red   { border-color: var(--red); }
+/* SECTION */
+.section-title{font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:28px 0 14px;display:flex;align-items:center;gap:8px;}
+.section-title::before{content:'';display:inline-block;width:3px;height:14px;background:var(--blue);border-radius:2px;}
 
-  /* GRID */
-  .section-title { font-size: 1rem; font-weight: 700; margin: 28px 0 14px; color: var(--text); border-left: 3px solid var(--blue); padding-left: 12px; }
-  .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; margin-bottom: 24px; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-  .card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-  .card h3 .badge { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-  canvas { max-height: 240px; }
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:8px;}
+.kpi{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:20px 16px;text-align:center;position:relative;overflow:hidden;}
+.kpi::after{content:'';position:absolute;inset:0;opacity:0.05;border-radius:12px;}
+.kpi.kblue{border-color:rgba(99,102,241,0.4);}.kpi.kblue::after{background:var(--blue);}
+.kpi.kamber{border-color:rgba(245,158,11,0.4);}.kpi.kamber::after{background:var(--amber);}
+.kpi.kgreen{border-color:rgba(16,185,129,0.4);}.kpi.kgreen::after{background:var(--green);}
+.kpi.kred{border-color:rgba(239,68,68,0.4);}.kpi.kred::after{background:var(--red);}
+.kpi.kpink{border-color:rgba(236,72,153,0.4);}.kpi.kpink::after{background:var(--pink);}
+.kpi.kcyan{border-color:rgba(20,184,166,0.4);}.kpi.kcyan::after{background:var(--cyan);}
+.kpi-icon{font-size:1.5rem;margin-bottom:8px;}
+.kpi-val{font-size:2rem;font-weight:800;line-height:1;}
+.kpi-label{font-size:0.72rem;color:var(--muted);margin-top:5px;font-weight:500;}
 
-  /* DEV CARDS */
-  .dev-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
-  .dev-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-  .dev-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-  .dev-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; color: #fff; flex-shrink: 0; }
-  .dev-name { font-weight: 700; font-size: 0.95rem; }
-  .dev-total { font-size: 0.8rem; color: var(--muted); }
-  .dev-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
-  .stat-box { background: var(--surface2); border-radius: 8px; padding: 10px; text-align: center; }
-  .stat-box .snum { font-size: 1.3rem; font-weight: 800; }
-  .stat-box .slabel { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
-  .stat-box.active .snum { color: var(--amber); }
-  .stat-box.closed .snum { color: var(--green); }
-  .stat-box.new .snum    { color: var(--blue); }
-  .progress-bar { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
-  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
-  .progress-label { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); }
+/* CHARTS GRID */
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.card-title{font-size:0.85rem;font-weight:700;margin-bottom:16px;color:var(--text);display:flex;align-items:center;justify-content:space-between;}
+.card-title .sub{font-size:0.72rem;color:var(--muted);font-weight:400;}
+canvas{max-height:260px;}
+.full{grid-column:1/-1;}
 
-  /* TABLE */
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-  th { background: var(--surface2); padding: 10px 14px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); border-bottom: 1px solid var(--border); }
-  td { padding: 11px 14px; border-bottom: 1px solid var(--surface2); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--surface2); }
-  .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
-  .tag.active { background: rgba(245,158,11,0.15); color: var(--amber); }
-  .tag.closed { background: rgba(16,185,129,0.15); color: var(--green); }
-  .tag.new    { background: rgba(99,102,241,0.15);  color: var(--blue); }
+/* DEV TABLE */
+.dev-table{width:100%;border-collapse:collapse;font-size:0.85rem;}
+.dev-table th{background:var(--s2);padding:10px 14px;text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);border-bottom:1px solid var(--border);}
+.dev-table td{padding:12px 14px;border-bottom:1px solid var(--s2);vertical-align:middle;}
+.dev-table tr:last-child td{border-bottom:none;}
+.dev-table tr:hover td{background:var(--s2);}
+.avatar{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:0.8rem;color:#fff;margin-right:10px;vertical-align:middle;}
+.bar-cell{display:flex;align-items:center;gap:8px;}
+.bar-bg{flex:1;height:8px;background:var(--s2);border-radius:4px;overflow:hidden;min-width:60px;}
+.bar-fill{height:100%;border-radius:4px;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:700;}
+.badge.green{background:rgba(16,185,129,0.15);color:var(--green);}
+.badge.amber{background:rgba(245,158,11,0.15);color:var(--amber);}
+.badge.red{background:rgba(239,68,68,0.15);color:var(--red);}
+.badge.blue{background:rgba(99,102,241,0.15);color:var(--blue);}
 
-  /* LOADING */
-  #loading {
-    display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.9);
-    align-items: center; justify-content: center; flex-direction: column; gap: 16px; z-index: 999;
-  }
-  .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { color: var(--muted); font-size: 0.9rem; }
+/* INDIVIDUAL DEV CARDS */
+.dev-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
+.dev-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.dev-card-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.dev-card-name{font-weight:700;font-size:0.95rem;}
+.dev-card-sub{font-size:0.75rem;color:var(--muted);}
+.dev-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.dev-stat{background:var(--s2);border-radius:8px;padding:10px;text-align:center;}
+.dev-stat .n{font-size:1.4rem;font-weight:800;}
+.dev-stat .l{font-size:0.68rem;color:var(--muted);margin-top:2px;}
+.dev-stat.a .n{color:var(--amber);}
+.dev-stat.c .n{color:var(--green);}
+.dev-stat.nw .n{color:var(--blue);}
+.prog{height:6px;background:var(--s2);border-radius:3px;overflow:hidden;margin:8px 0 4px;}
+.prog-fill{height:100%;border-radius:3px;}
+.prog-label{display:flex;justify-content:space-between;font-size:0.7rem;color:var(--muted);}
 
-  .footer { text-align: center; color: var(--muted); font-size: 0.75rem; padding: 24px 0 12px; border-top: 1px solid var(--border); margin-top: 32px; }
+/* PAT MODAL */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;}
+.modal.open{display:flex;}
+.modal-box{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:420px;}
+.modal-box h2{margin-bottom:8px;}
+.modal-box p{color:var(--muted);font-size:0.85rem;margin-bottom:20px;}
+.modal-box input{width:100%;padding:10px 14px;background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;margin-bottom:14px;outline:none;}
+.modal-box input:focus{border-color:var(--blue);}
+.modal-box .btn{width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:0.95rem;font-weight:600;cursor:pointer;}
+
+/* LOADING OVERLAY */
+.loading{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.92);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+.loading.show{display:flex;}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{color:var(--muted);font-size:0.88rem;}
+
+.footer{text-align:center;color:var(--muted);font-size:0.75rem;padding:20px 0;margin-top:20px;border-top:1px solid var(--border);}
+
+@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
 
-<!-- CONFIG SCREEN -->
-<div id="config-screen">
-  <div class="config-box">
-    <h1>📊 Dr. Alaa Dashboard</h1>
-    <p>Enter your Azure DevOps credentials to load the live dashboard. These are saved in your browser only.</p>
-    <div class="field">
-      <label>Personal Access Token (PAT)</label>
-      <input type="password" id="pat-input" placeholder="Paste your PAT here..."/>
-    </div>
-    <div class="field">
-      <label>Days range (before &amp; after today)</label>
-      <input type="number" id="days-input" value="15" min="1" max="90"/>
-    </div>
-    <button class="btn" onclick="loadDashboard()">Load Live Dashboard</button>
-    <div class="error" id="error-msg"></div>
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="dot"></div>
+    Dr. Alaa — ABS Development Dashboard
   </div>
-</div>
+  <div class="nav-right">
+    <span class="nav-date" id="nav-date"></span>
+    <button class="pat-btn" onclick="openModal()">🔑 Update PAT</button>
+    <button class="pat-btn" onclick="fetchLive()">🔄 Refresh</button>
+  </div>
+</nav>
 
 <!-- LOADING -->
-<div id="loading">
+<div class="loading" id="loading">
   <div class="spinner"></div>
-  <div class="loading-text" id="loading-text">Fetching work items...</div>
+  <div class="load-txt" id="load-txt">Loading...</div>
 </div>
 
-<!-- DASHBOARD -->
-<div id="dashboard">
-  <div class="top-bar">
-    <div>
-      <h1>📊 Dr. Alaa — Development Overview</h1>
-      <div class="meta" id="dash-meta"></div>
+<!-- PAT MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h2>🔑 Azure DevOps PAT</h2>
+    <p>Enter your Personal Access Token. It is saved only in your browser session and never sent anywhere else.</p>
+    <input type="password" id="pat-input" placeholder="Paste PAT here..."/>
+    <button class="btn" onclick="savePATAndLoad()">Load Dashboard</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="main-content">
+
+  <!-- KPIs -->
+  <div class="section-title">Executive Summary</div>
+  <div class="kpi-grid" id="kpi-grid">
+    <div class="kpi kblue"><div class="kpi-icon">📋</div><div class="kpi-val" id="k-total">200</div><div class="kpi-label">Total Work Items</div></div>
+    <div class="kpi kamber"><div class="kpi-icon">⚡</div><div class="kpi-val" id="k-active">147</div><div class="kpi-label">Active</div></div>
+    <div class="kpi kgreen"><div class="kpi-icon">✅</div><div class="kpi-val" id="k-closed">43</div><div class="kpi-label">Closed</div></div>
+    <div class="kpi kred"><div class="kpi-icon">🆕</div><div class="kpi-val" id="k-new">8</div><div class="kpi-label">New / Backlog</div></div>
+    <div class="kpi kgreen"><div class="kpi-icon">🎯</div><div class="kpi-val" id="k-rate">22%</div><div class="kpi-label">Completion Rate</div></div>
+    <div class="kpi kcyan"><div class="kpi-icon">👥</div><div class="kpi-val">10</div><div class="kpi-label">Developers</div></div>
+  </div>
+
+  <!-- ROW 1: State + Workload -->
+  <div class="section-title">Team Overview</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Overall State Distribution <span class="sub">All work items</span></div>
+      <canvas id="c-state"></canvas>
     </div>
-    <button class="refresh-btn" onclick="loadDashboard()">🔄 Refresh</button>
+    <div class="card">
+      <div class="card-title">Workload per Developer <span class="sub">Total items assigned</span></div>
+      <canvas id="c-workload"></canvas>
+    </div>
   </div>
 
-  <div class="kpi-row" id="kpi-row"></div>
-
-  <div class="section-title">📈 Team Overview Charts</div>
-  <div class="charts-grid">
-    <div class="card"><h3><span class="badge" style="background:#6366f1"></span>Work Items by State</h3><canvas id="chart-state"></canvas></div>
-    <div class="card"><h3><span class="badge" style="background:#f59e0b"></span>Workload per Developer</h3><canvas id="chart-workload"></canvas></div>
-    <div class="card"><h3><span class="badge" style="background:#10b981"></span>Completion Rate</h3><canvas id="chart-completion"></canvas></div>
-    <div class="card"><h3><span class="badge" style="background:#ec4899"></span>Active vs Closed (30 days)</h3><canvas id="chart-trend"></canvas></div>
+  <!-- ROW 2: Stacked + Completion -->
+  <div class="grid-2" style="margin-top:18px;">
+    <div class="card">
+      <div class="card-title">Active vs Closed vs New <span class="sub">Per developer</span></div>
+      <canvas id="c-stacked"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-title">Completion Rate % <span class="sub">Closed ÷ Total</span></div>
+      <canvas id="c-completion"></canvas>
+    </div>
   </div>
 
-  <div class="section-title">👥 Developer Breakdown</div>
-  <div class="dev-grid" id="dev-grid"></div>
-
-  <div class="section-title">📋 Full Work Item Table</div>
+  <!-- Developer Summary Table -->
+  <div class="section-title">Developer Performance Table</div>
   <div class="card">
-    <div class="table-wrap">
-      <table id="wi-table">
-        <thead><tr>
-          <th>#</th><th>Title</th><th>Assigned To</th>
-          <th>Type</th><th>State</th><th>Created</th>
-        </tr></thead>
-        <tbody id="wi-tbody"></tbody>
-      </table>
-    </div>
+    <table class="dev-table" id="dev-table">
+      <thead><tr>
+        <th>Developer</th>
+        <th>Total</th>
+        <th>Active</th>
+        <th>Closed</th>
+        <th>New</th>
+        <th>Workload</th>
+        <th>Completion</th>
+      </tr></thead>
+      <tbody id="dev-tbody"></tbody>
+    </table>
   </div>
 
-  <div class="footer" id="footer"></div>
+  <!-- Individual Dev Cards -->
+  <div class="section-title">Individual Developer Breakdown</div>
+  <div class="dev-cards" id="dev-cards"></div>
+
+  <div class="footer" id="footer">ABS-Central · Dr. Alaa Overview · Data from Azure DevOps</div>
 </div>
 
 <script>
-const ORG     = "ADVBUSSOL";
-const PROJECT = "ABS-Central";
+const ORG = "ADVBUSSOL", PROJECT = "ABS-Central";
+const COLORS = ["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899","#14b8a6","#f97316","#8b5cf6","#84cc16"];
 
-const DEV_COLORS = [
-  "#6366f1","#f59e0b","#10b981","#ef4444",
-  "#3b82f6","#ec4899","#14b8a6","#f97316","#8b5cf6","#84cc16"
-];
+// Seed data (always shown, replaced when PAT is provided)
+const SEED = {
+  "Anas Al Tobasi":      {active:40,closed:8,new:1,total:49},
+  "Hamzah Lababidi":     {active:19,closed:11,new:2,total:32},
+  "Ahmad Moshtha":       {active:16,closed:6,new:0,total:22},
+  "Mohammad Alkhalaileh":{active:12,closed:8,new:2,total:22},
+  "Moath Asfour":        {active:18,closed:1,new:1,total:20},
+  "Tareq Alamoudi":      {active:19,closed:0,new:0,total:19},
+  "Hashem Qaryouti":     {active:7,closed:6,new:2,total:15},
+  "Omar Alzubi":         {active:14,closed:0,new:0,total:14},
+  "Karam Albataineh":    {active:2,closed:2,new:0,total:4},
+  "Jamal Nofal":         {active:2,closed:1,new:0,total:3},
+};
 
 let charts = {};
 
-function getPAT() { return sessionStorage.getItem("ado_pat") || ""; }
-function savePAT(p) { sessionStorage.setItem("ado_pat", p); }
+function getPAT(){ return sessionStorage.getItem("ado_pat")||""; }
+function openModal(){ document.getElementById("modal").classList.add("open"); }
+function closeModal(){ document.getElementById("modal").classList.remove("open"); }
+function savePATAndLoad(){
+  const p = document.getElementById("pat-input").value.trim();
+  if(!p) return;
+  sessionStorage.setItem("ado_pat", p);
+  closeModal();
+  fetchLive();
+}
+function showLoad(t){ document.getElementById("loading").classList.add("show"); document.getElementById("load-txt").textContent=t||"Loading..."; }
+function hideLoad(){ document.getElementById("loading").classList.remove("show"); }
+function auth(pat){ return "Basic "+btoa(":"+pat); }
 
-function authHeader(pat) {
-  return "Basic " + btoa(":" + pat);
+// Update date
+function updateDate(){
+  const now = new Date();
+  document.getElementById("nav-date").textContent = now.toLocaleDateString("en-US",{weekday:"short",year:"numeric",month:"short",day:"numeric"})+" · "+now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
 }
 
-function showLoading(msg) {
-  document.getElementById("loading").style.display = "flex";
-  document.getElementById("loading-text").textContent = msg;
-}
-function hideLoading() {
-  document.getElementById("loading").style.display = "none";
-}
-function showError(msg) {
-  const el = document.getElementById("error-msg");
-  el.textContent = msg; el.style.display = "block";
-}
-
-async function adoFetch(url, pat) {
-  const r = await fetch(url, { headers: { "Authorization": authHeader(pat), "Content-Type": "application/json" } });
-  if (!r.ok) throw new Error(`API error ${r.status}: ${await r.text()}`);
-  return r.json();
-}
-
-async function loadDashboard() {
-  const pat  = document.getElementById("pat-input")?.value || getPAT();
-  const days = parseInt(document.getElementById("days-input")?.value || 15);
-
-  if (!pat) { showError("Please enter your PAT."); return; }
-  savePAT(pat);
-
-  document.getElementById("config-screen").style.display = "none";
-  document.getElementById("dashboard").style.display = "none";
-  showLoading("Running WIQL query...");
-
+async function fetchLive(){
+  const pat = getPAT();
+  if(!pat){ openModal(); return; }
+  showLoad("Running WIQL query...");
   try {
-    const today = new Date();
-    const past  = new Date(today); past.setDate(today.getDate() - days);
-    const future= new Date(today); future.setDate(today.getDate() + days);
-    const fmt   = d => d.toISOString().split("T")[0];
+    const wiql = { query: `SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject]='${PROJECT}' AND [System.WorkItemType] IN ('Epic','Feature','User Story','Task','Issue','Bug') ORDER BY [System.AssignedTo]` };
+    const wr = await fetch(`https://dev.azure.com/${ORG}/${PROJECT}/_apis/wit/wiql?api-version=7.1`,
+      {method:"POST",headers:{"Authorization":auth(pat),"Content-Type":"application/json"},body:JSON.stringify(wiql)});
+    if(!wr.ok) throw new Error("WIQL "+wr.status);
+    const wj = await wr.json();
+    const ids = (wj.workItems||[]).map(w=>w.id);
+    if(!ids.length){ hideLoad(); return; }
 
-    // WIQL query — flat, works with charts
-    const wiql = {
-      query: `SELECT [System.Id], [System.Title], [System.State], [System.AssignedTo],
-              [System.WorkItemType], [System.CreatedDate], [System.ChangedDate],
-              [Microsoft.VSTS.Scheduling.StoryPoints]
-              FROM WorkItems
-              WHERE [System.TeamProject] = '${PROJECT}'
-              AND [System.WorkItemType] IN ('Epic','Feature','User Story','Task','Issue','Bug')
-              ORDER BY [System.AssignedTo]`
-    };
-
-    showLoading("Fetching work items...");
-    const wiqlRes = await adoFetch(
-      `https://dev.azure.com/${ORG}/${PROJECT}/_apis/wit/wiql?api-version=7.1`,
-      pat
-    ).then(async () => {
-      // POST the WIQL
-      const r = await fetch(
-        `https://dev.azure.com/${ORG}/${PROJECT}/_apis/wit/wiql?api-version=7.1`,
-        {
-          method: "POST",
-          headers: { "Authorization": authHeader(pat), "Content-Type": "application/json" },
-          body: JSON.stringify(wiql)
-        }
-      );
-      if (!r.ok) throw new Error(await r.text());
-      return r.json();
-    });
-
-    const ids = wiqlRes.workItems.map(w => w.id);
-    if (!ids.length) throw new Error("No work items found.");
-
-    showLoading(`Fetching details for ${ids.length} items...`);
-    const fields = ["System.Id","System.Title","System.State","System.AssignedTo",
-                    "System.WorkItemType","System.CreatedDate","System.ChangedDate",
-                    "Microsoft.VSTS.Scheduling.StoryPoints"];
-
-    // Batch fetch in chunks of 200
-    let allItems = [];
-    for (let i = 0; i < ids.length; i += 200) {
-      const chunk = ids.slice(i, i+200);
-      const r = await fetch(
-        `https://dev.azure.com/${ORG}/${PROJECT}/_apis/wit/workitemsbatch?api-version=7.1`,
-        {
-          method: "POST",
-          headers: { "Authorization": authHeader(pat), "Content-Type": "application/json" },
-          body: JSON.stringify({ ids: chunk, fields })
-        }
-      );
-      if (!r.ok) throw new Error(await r.text());
-      const data = await r.json();
-      allItems = allItems.concat(data.value || []);
+    showLoad(`Fetching ${ids.length} work items...`);
+    const fields = ["System.Id","System.Title","System.State","System.AssignedTo","System.WorkItemType","System.CreatedDate","Microsoft.VSTS.Scheduling.StoryPoints"];
+    let all = [];
+    for(let i=0;i<ids.length;i+=200){
+      const chunk=ids.slice(i,i+200);
+      const br = await fetch(`https://dev.azure.com/${ORG}/${PROJECT}/_apis/wit/workitemsbatch?api-version=7.1`,
+        {method:"POST",headers:{"Authorization":auth(pat),"Content-Type":"application/json"},body:JSON.stringify({ids:chunk,fields})});
+      if(!br.ok) throw new Error("Batch "+br.status);
+      const bj = await br.json();
+      all = all.concat(bj.value||[]);
     }
 
-    showLoading("Building dashboard...");
-    renderDashboard(allItems, days, today);
-    hideLoading();
-    document.getElementById("dashboard").style.display = "block";
+    // Build devMap from live data
+    const devMap = {};
+    all.forEach(wi=>{
+      const f = wi.fields;
+      const a = f["System.AssignedTo"];
+      const name = a ? a.displayName.replace(" ABS","").trim() : "Unassigned";
+      const state = f["System.State"]||"Unknown";
+      if(!devMap[name]) devMap[name]={active:0,closed:0,new:0,total:0};
+      devMap[name].total++;
+      if(state==="Active") devMap[name].active++;
+      else if(state==="Closed") devMap[name].closed++;
+      else if(state==="New") devMap[name].new++;
+    });
 
-  } catch(e) {
-    hideLoading();
-    document.getElementById("config-screen").style.display = "flex";
-    showError("Error: " + e.message);
+    renderAll(devMap);
+    hideLoad();
+    document.getElementById("footer").textContent = `ABS-Central · Dr. Alaa Overview · Live data · ${new Date().toLocaleString()} · ${all.length} work items`;
+  } catch(e){
+    hideLoad();
+    alert("Error fetching live data: "+e.message+"\n\nShowing cached data.");
+    renderAll(SEED);
   }
 }
 
-function renderDashboard(items, days, today) {
-  // Destroy old charts
-  Object.values(charts).forEach(c => c.destroy());
-  charts = {};
+function renderAll(devMap){
+  Object.values(charts).forEach(c=>c.destroy());
+  charts={};
 
-  const past   = new Date(today); past.setDate(today.getDate() - days);
-  const future = new Date(today); future.setDate(today.getDate() + days);
+  const devList = Object.entries(devMap).sort((a,b)=>b[1].total-a[1].total);
+  const names   = devList.map(d=>d[0]);
+  const totals  = devList.map(d=>d[1].total);
+  const actives = devList.map(d=>d[1].active);
+  const closeds = devList.map(d=>d[1].closed);
+  const news    = devList.map(d=>d[1].new);
+  const devColors = devList.map((_,i)=>COLORS[i%COLORS.length]);
 
-  // Process
-  const devMap = {};
-  let totalActive = 0, totalClosed = 0, totalNew = 0;
+  const totalAll   = devList.reduce((s,d)=>s+d[1].total,0);
+  const totalAct   = devList.reduce((s,d)=>s+d[1].active,0);
+  const totalClo   = devList.reduce((s,d)=>s+d[1].closed,0);
+  const totalNew   = devList.reduce((s,d)=>s+d[1].new,0);
+  const rate       = totalAll ? Math.round(totalClo/totalAll*100) : 0;
 
-  items.forEach(wi => {
-    const f = wi.fields;
-    const assignee = f["System.AssignedTo"];
-    const name = assignee ? assignee.displayName.replace(" ABS","").trim() : "Unassigned";
-    const state = f["System.State"] || "Unknown";
-    const type  = f["System.WorkItemType"] || "Unknown";
-    const created = f["System.CreatedDate"] ? new Date(f["System.CreatedDate"]) : null;
+  // KPIs
+  document.getElementById("k-total").textContent  = totalAll;
+  document.getElementById("k-active").textContent = totalAct;
+  document.getElementById("k-closed").textContent = totalClo;
+  document.getElementById("k-new").textContent    = totalNew;
+  document.getElementById("k-rate").textContent   = rate+"%";
 
-    if (!devMap[name]) devMap[name] = { total:0, active:0, closed:0, new:0, items:[], sp:0 };
-    devMap[name].total++;
-    devMap[name].sp += f["Microsoft.VSTS.Scheduling.StoryPoints"] || 0;
-    devMap[name].items.push({ id: wi.id, title: f["System.Title"], state, type, created });
-
-    if (state === "Active")      { devMap[name].active++; totalActive++; }
-    else if (state === "Closed") { devMap[name].closed++; totalClosed++; }
-    else if (state === "New")    { devMap[name].new++;    totalNew++; }
+  // Chart: State donut
+  charts.state = new Chart(document.getElementById("c-state"),{
+    type:"doughnut",
+    data:{labels:["Active","Closed","New"],datasets:[{data:[totalAct,totalClo,totalNew],backgroundColor:["#f59e0b","#10b981","#6366f1"],borderWidth:3,borderColor:"#1e293b"}]},
+    options:{responsive:true,cutout:"65%",plugins:{legend:{position:"bottom",labels:{color:"#94a3b8",padding:16}},tooltip:{callbacks:{label:ctx=>" "+ctx.label+": "+ctx.parsed+" ("+Math.round(ctx.parsed/totalAll*100)+"%)"}}}}
   });
 
-  const total = items.length;
-  const devList = Object.entries(devMap).sort((a,b) => b[1].total - a[1].total);
-
-  // KPI
-  document.getElementById("kpi-row").innerHTML = `
-    <div class="kpi blue"><div class="icon">📋</div><div class="num">${total}</div><div class="label">Total Items</div></div>
-    <div class="kpi amber"><div class="icon">⚡</div><div class="num">${totalActive}</div><div class="label">Active</div></div>
-    <div class="kpi green"><div class="icon">✅</div><div class="num">${totalClosed}</div><div class="label">Closed</div></div>
-    <div class="kpi red"><div class="icon">🆕</div><div class="num">${totalNew}</div><div class="label">New</div></div>
-    <div class="kpi green"><div class="icon">🎯</div><div class="num">${total?Math.round(totalClosed/total*100):0}%</div><div class="label">Completion</div></div>
-    <div class="kpi blue"><div class="icon">👥</div><div class="num">${devList.length}</div><div class="label">Developers</div></div>
-  `;
-
-  document.getElementById("dash-meta").textContent =
-    `Last updated: ${today.toLocaleString()} · ${days} days before & after today · ${total} work items`;
-  document.getElementById("footer").textContent =
-    `Dr. Alaa Overview · ABS-Central · ${today.toLocaleDateString()}`;
-
-  // Chart 1: State donut
-  charts.state = new Chart(document.getElementById("chart-state"), {
-    type: "doughnut",
-    data: {
-      labels: ["Active","Closed","New"],
-      datasets: [{ data: [totalActive, totalClosed, totalNew],
-        backgroundColor: ["#f59e0b","#10b981","#6366f1"], borderWidth: 2, borderColor: "#1e293b" }]
-    },
-    options: { responsive:true, cutout:"65%", plugins:{ legend:{ position:"bottom" } } }
+  // Chart: Workload bar
+  charts.workload = new Chart(document.getElementById("c-workload"),{
+    type:"bar",
+    data:{labels:names,datasets:[{label:"Total",data:totals,backgroundColor:devColors,borderRadius:5}]},
+    options:{indexAxis:"y",responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{color:"#94a3b8"}},y:{ticks:{color:"#f1f5f9"}}}}
   });
 
-  // Chart 2: Workload bar
-  const devNames  = devList.map(d => d[0]);
-  const devTotals = devList.map(d => d[1].total);
-  const devColors = devList.map((_,i) => DEV_COLORS[i % DEV_COLORS.length]);
-  charts.workload = new Chart(document.getElementById("chart-workload"), {
-    type: "bar",
-    data: { labels: devNames, datasets: [{ label:"Total", data: devTotals, backgroundColor: devColors, borderRadius:4 }] },
-    options: { indexAxis:"y", responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ beginAtZero:true } } }
+  // Chart: Stacked
+  charts.stacked = new Chart(document.getElementById("c-stacked"),{
+    type:"bar",
+    data:{labels:names,datasets:[
+      {label:"Active",data:actives,backgroundColor:"#f59e0b",borderRadius:3},
+      {label:"Closed",data:closeds,backgroundColor:"#10b981",borderRadius:3},
+      {label:"New",   data:news,   backgroundColor:"#6366f1",borderRadius:3},
+    ]},
+    options:{responsive:true,plugins:{legend:{position:"top",labels:{color:"#94a3b8"}}},scales:{x:{stacked:true,ticks:{color:"#94a3b8",maxRotation:30}},y:{stacked:true,beginAtZero:true,ticks:{color:"#94a3b8"}}}}
   });
 
-  // Chart 3: Completion rate
-  const compRates = devList.map(d => d[1].total ? Math.round(d[1].closed/d[1].total*100) : 0);
-  charts.completion = new Chart(document.getElementById("chart-completion"), {
-    type: "bar",
-    data: { labels: devNames, datasets: [{ label:"Completion %", data: compRates,
-      backgroundColor: compRates.map(v => v>=70?"#10b981":v>=40?"#f59e0b":"#ef4444"), borderRadius:4 }] },
-    options: { indexAxis:"y", responsive:true, plugins:{ legend:{ display:false } },
-      scales:{ x:{ min:0, max:100, ticks:{ callback: v => v+"%" } } } }
+  // Chart: Completion
+  const compRates = devList.map(d=>d[1].total?Math.round(d[1].closed/d[1].total*100):0);
+  charts.completion = new Chart(document.getElementById("c-completion"),{
+    type:"bar",
+    data:{labels:names,datasets:[{label:"Completion %",data:compRates,backgroundColor:compRates.map(v=>v>=70?"#10b981":v>=40?"#f59e0b":"#ef4444"),borderRadius:5}]},
+    options:{indexAxis:"y",responsive:true,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,ticks:{color:"#94a3b8",callback:v=>v+"%"}},y:{ticks:{color:"#f1f5f9"}}}}
   });
 
-  // Chart 4: Stacked bar Active/New/Closed per dev
-  charts.trend = new Chart(document.getElementById("chart-trend"), {
-    type: "bar",
-    data: {
-      labels: devNames,
-      datasets: [
-        { label:"Active",  data: devList.map(d=>d[1].active),  backgroundColor:"#f59e0b", borderRadius:3 },
-        { label:"Closed",  data: devList.map(d=>d[1].closed),  backgroundColor:"#10b981", borderRadius:3 },
-        { label:"New",     data: devList.map(d=>d[1].new),     backgroundColor:"#6366f1", borderRadius:3 },
-      ]
-    },
-    options: { responsive:true, plugins:{ legend:{ position:"top" } },
-      scales:{ x:{ stacked:true }, y:{ stacked:true, beginAtZero:true } } }
+  // Developer table
+  const tbody = document.getElementById("dev-tbody");
+  tbody.innerHTML="";
+  const maxTotal = totals[0]||1;
+  devList.forEach(([name,info],i)=>{
+    const color = COLORS[i%COLORS.length];
+    const cr = info.total?Math.round(info.closed/info.total*100):0;
+    const crClass = cr>=70?"green":cr>=40?"amber":"red";
+    const barW = Math.round(info.total/maxTotal*100);
+    tbody.innerHTML+=`<tr>
+      <td><span class="avatar" style="background:${color}">${name[0]}</span>${name}</td>
+      <td><strong>${info.total}</strong></td>
+      <td style="color:var(--amber);font-weight:600">${info.active}</td>
+      <td style="color:var(--green);font-weight:600">${info.closed}</td>
+      <td style="color:var(--blue);font-weight:600">${info.new}</td>
+      <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${barW}%;background:${color}"></div></div>${info.total}</div></td>
+      <td><span class="badge ${crClass}">${cr}%</span></td>
+    </tr>`;
   });
 
   // Developer cards
-  const devGrid = document.getElementById("dev-grid");
-  devGrid.innerHTML = "";
-  devList.forEach(([name, info], i) => {
-    const color = DEV_COLORS[i % DEV_COLORS.length];
-    const cr = info.total ? Math.round(info.closed/info.total*100) : 0;
+  const dc = document.getElementById("dev-cards");
+  dc.innerHTML="";
+  devList.forEach(([name,info],i)=>{
+    const color = COLORS[i%COLORS.length];
+    const cr = info.total?Math.round(info.closed/info.total*100):0;
     const crColor = cr>=70?"#10b981":cr>=40?"#f59e0b":"#ef4444";
-    devGrid.innerHTML += `
-      <div class="dev-card">
-        <div class="dev-header">
-          <div class="dev-avatar" style="background:${color}">${name[0]}</div>
-          <div>
-            <div class="dev-name">${name}</div>
-            <div class="dev-total">${info.total} work items · ${info.sp} story pts</div>
-          </div>
-        </div>
-        <div class="dev-stats">
-          <div class="stat-box active"><div class="snum">${info.active}</div><div class="slabel">Active</div></div>
-          <div class="stat-box closed"><div class="snum">${info.closed}</div><div class="slabel">Closed</div></div>
-          <div class="stat-box new"><div class="snum">${info.new}</div><div class="slabel">New</div></div>
-        </div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${cr}%;background:${crColor}"></div></div>
-        <div class="progress-label"><span>Completion Rate</span><span style="color:${crColor};font-weight:700">${cr}%</span></div>
-      </div>`;
-  });
-
-  // Table
-  const tbody = document.getElementById("wi-tbody");
-  tbody.innerHTML = "";
-  const sorted = [...items].sort((a,b) => {
-    const sa = a.fields["System.AssignedTo"]?.displayName||"";
-    const sb = b.fields["System.AssignedTo"]?.displayName||"";
-    return sa.localeCompare(sb);
-  });
-  sorted.forEach(wi => {
-    const f = wi.fields;
-    const name = (f["System.AssignedTo"]?.displayName||"Unassigned").replace(" ABS","").trim();
-    const state = f["System.State"]||"";
-    const created = f["System.CreatedDate"] ? new Date(f["System.CreatedDate"]).toLocaleDateString() : "-";
-    const tagClass = state==="Active"?"active":state==="Closed"?"closed":"new";
-    const title = (f["System.Title"]||"").substring(0,60) + (f["System.Title"]?.length>60?"...":"");
-    tbody.innerHTML += `<tr>
-      <td style="color:var(--muted);font-size:0.8rem">${wi.id}</td>
-      <td>${title}</td>
-      <td>${name}</td>
-      <td style="color:var(--muted);font-size:0.8rem">${f["System.WorkItemType"]||""}</td>
-      <td><span class="tag ${tagClass}">${state}</span></td>
-      <td style="color:var(--muted);font-size:0.8rem">${created}</td>
-    </tr>`;
+    dc.innerHTML+=`
+    <div class="dev-card">
+      <div class="dev-card-head">
+        <div class="avatar" style="background:${color};width:44px;height:44px;font-size:1rem">${name[0]}</div>
+        <div><div class="dev-card-name">${name}</div><div class="dev-card-sub">${info.total} total work items</div></div>
+      </div>
+      <div class="dev-stat-row">
+        <div class="dev-stat a"><div class="n">${info.active}</div><div class="l">Active</div></div>
+        <div class="dev-stat c"><div class="n">${info.closed}</div><div class="l">Closed</div></div>
+        <div class="dev-stat nw"><div class="n">${info.new}</div><div class="l">New</div></div>
+      </div>
+      <div class="prog"><div class="prog-fill" style="width:${cr}%;background:${crColor}"></div></div>
+      <div class="prog-label"><span>Completion Rate</span><span style="color:${crColor};font-weight:700">${cr}%</span></div>
+    </div>`;
   });
 }
 
-// Auto-load if PAT saved
-window.onload = () => {
-  const saved = getPAT();
-  if (saved) {
-    document.getElementById("pat-input").value = saved;
-  }
-};
-</script>
+// Init
+updateDate();
+setInterval(updateDate, 60000);
+renderAll(SEED); // Show seed data immediately
 
-<!-- Fix the double-fetch bug -->
-<script>
-// Override loadDashboard to fix the wiql fetch
-async function loadDashboard() {
-  const pat  = document.getElementById("pat-input")?.value || getPAT();
-  const days = parseInt(document.getElementById("days-input")?.value || "15");
-  if (!pat) { showError("Please enter your PAT."); return; }
-  savePAT(pat);
-
-  document.getElementById("config-screen").style.display = "none";
-  document.getElementById("dashboard").style.display = "none";
-  showLoading("Running WIQL query...");
-
-  try {
-    const today = new Date();
-    const wiql  = {
-      query: `SELECT [System.Id] FROM WorkItems
-              WHERE [System.TeamProject] = '${PROJECT}'
-              AND [System.WorkItemType] IN ('Epic','Feature','User Story','Task','Issue','Bug')
-              ORDER BY [System.AssignedTo]`
-    };
-
-    const wiqlRes = await fetch(
-      `https://dev.azure.com/${ORG}/${PROJECT}/_apis/wit/wiql?api-version=7.1`,
-      { method:"POST", headers:{ "Authorization": authHeader(pat), "Content-Type":"application/json" }, body: JSON.stringify(wiql) }
-    ).then(r => { if(!r.ok) throw new Error("WIQL failed: "+r.status); return r.json(); });
-
-    const ids = (wiqlRes.workItems||[]).map(w=>w.id);
-    if (!ids.length) throw new Error("No work items found.");
-
-    showLoading(`Loading ${ids.length} work items...`);
-    const fields = ["System.Id","System.Title","System.State","System.AssignedTo",
-                    "System.WorkItemType","System.CreatedDate","System.ChangedDate",
-                    "Microsoft.VSTS.Scheduling.StoryPoints"];
-
-    let allItems = [];
-    for (let i=0; i<ids.length; i+=200) {
-      const chunk = ids.slice(i,i+200);
-      const r = await fetch(
-        `https://dev.azure.com/${ORG}/${PROJECT}/_apis/wit/workitemsbatch?api-version=7.1`,
-        { method:"POST", headers:{ "Authorization": authHeader(pat), "Content-Type":"application/json" }, body: JSON.stringify({ids:chunk,fields}) }
-      );
-      if (!r.ok) throw new Error("Batch fetch failed: "+r.status);
-      const data = await r.json();
-      allItems = allItems.concat(data.value||[]);
-    }
-
-    showLoading("Rendering dashboard...");
-    renderDashboard(allItems, days, today);
-    hideLoading();
-    document.getElementById("dashboard").style.display = "block";
-
-  } catch(e) {
-    hideLoading();
-    document.getElementById("config-screen").style.display = "flex";
-    showError("Error: " + e.message);
-  }
-}
+// Auto-load if PAT exists
+const saved = getPAT();
+if(saved){ document.getElementById("pat-input").value=saved; fetchLive(); }
+else { openModal(); }
 </script>
 </body>
 </html>

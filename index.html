@@ -458,7 +458,15 @@ const TYPE_COLORS={Epic:"#9d7fff",Feature:"#4d9fff","User Story":"#00d4a0",Task:
 let STATE={devs:[],types:{},velocity:[0,0,0,0,0,0,0,0],overdue:[],rawItems:[]};
 let CHARTS={};
 
-const getPAT=()=>sessionStorage.getItem("ado_pat")||"";
+const getPAT=()=>{
+  // Try URL hash first (works in iframes: set URL as https://...#PAT=yourtoken)
+  const hash=window.location.hash;
+  if(hash.startsWith("#PAT=")){
+    const p=decodeURIComponent(hash.slice(5));
+    if(p){localStorage.setItem("ado_pat",p);return p;}
+  }
+  return localStorage.getItem("ado_pat")||"";
+};
 const auth=p=>"Basic "+btoa(":"+p);
 const cr=d=>d.total?Math.round(d.closed/d.total*100):0;
 const crColor=v=>v>=70?"var(--green)":v>=40?"var(--amber)":"var(--red)";
@@ -519,7 +527,7 @@ async function fetchLive(forcePAT){
        body:JSON.stringify({query:"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject]='ABS-Central' AND [System.WorkItemType] IN ('Epic','Feature','User Story','Task','Issue') AND [System.Title] NOT CONTAINS 'SAP Service Call' AND ( ([System.ChangedDate] >= '"+dateStr(rangeStart)+"' AND [System.ChangedDate] <= '"+dateStr(rangeEnd)+"') OR ([System.CreatedDate] >= '"+dateStr(rangeStart)+"' AND [System.CreatedDate] <= '"+dateStr(rangeEnd)+"') OR ([Microsoft.VSTS.Scheduling.StartDate] >= '"+dateStr(rangeStart)+"' AND [Microsoft.VSTS.Scheduling.StartDate] <= '"+dateStr(rangeEnd)+"') OR ([Microsoft.VSTS.Scheduling.TargetDate] >= '"+dateStr(rangeStart)+"' AND [Microsoft.VSTS.Scheduling.TargetDate] <= '"+dateStr(rangeEnd)+"') ) ORDER BY [System.AssignedTo]"})});
     if(!wr.ok){
       if(wr.status===401||wr.status===403||wr.status===400||wr.status===203||!wr.ok){
-        sessionStorage.removeItem("ado_pat");
+        localStorage.removeItem("ado_pat");
         window._tempPAT=null;
         const errEl=document.getElementById("pat-error");
         errEl.textContent="Invalid or incorrect token ("+wr.status+"). Please check your PAT and try again.";
@@ -549,7 +557,7 @@ async function fetchLive(forcePAT){
     }
     showLoad("Processing data...");
     // PAT is valid - now save it
-    sessionStorage.setItem("ado_pat",pat);
+    localStorage.setItem("ado_pat",pat);
     window._tempPAT=null;
     STATE.rawItems=all;
     processData(all);
@@ -561,7 +569,7 @@ async function fetchLive(forcePAT){
     document.getElementById("footer").textContent=`ABS-Central · Dr. Alaa Intelligence · Last updated ${now.toLocaleString()} · ${all.length} items`;
   }catch(e){
     hideLoad();
-    sessionStorage.removeItem("ado_pat");
+    localStorage.removeItem("ado_pat");
     window._tempPAT=null;
     const errEl=document.getElementById("pat-error");
     if(errEl){
@@ -1163,6 +1171,13 @@ if(saved){
   document.getElementById("pat-input").value=saved;
   fetchLive();
 } else {
+  // If inside an iframe, show a cleaner message
+  const inIframe=window.self!==window.top;
+  if(inIframe){
+    // Try to open in new tab if modal can't show properly
+    document.getElementById("overlay").style.position="fixed";
+    document.getElementById("overlay").style.zIndex="99999";
+  }
   openModal();
 }
 // Force scrollbar visibility in Azure DevOps

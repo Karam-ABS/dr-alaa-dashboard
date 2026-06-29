@@ -969,7 +969,6 @@ function downloadExcel(){
     blankRow(ws1, 8);
     sectionRow(ws1, "  TEAM PERFORMANCE KPIs", 8);
 
-    // KPI header
     const kpiHdr = ws1.addRow(["Metric","","Value","","Notes","","",""]);
     kpiHdr.height = 22;
     ["Metric","","Value","","Notes","","",""].forEach((_,i)=>{ styleCell(kpiHdr.getCell(i+1),FILLS.header,FONTS.header,"center"); });
@@ -1116,50 +1115,48 @@ function downloadExcel(){
       styleCell(row.getCell(3),rf,FONTS.normal,"center");
     });
 
-    // ── DOWNLOAD WITH AZURE DEVOPS FIX ────────────────────────────
-    showLoad("Generating download...");
+    // ── GENERATE & TRIGGER DOWNLOAD ────────────────────────────
+    showLoad("Finalizing download...");
     const buf = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
     const filename = "ABS-Intelligence-"+now2.toISOString().split("T")[0]+".xlsx";
     
-    // Try multiple download methods for compatibility
-    if(navigator.msSaveBlob) {
-      // IE/Edge
-      navigator.msSaveBlob(blob, filename);
-    } else if(navigator.userAgent.indexOf("Safari") > -1 && navigator.userAgent.indexOf("Chrome") === -1) {
-      // Safari
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const url = e.target.result;
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
+    // Create URL and open in new tab/window (works in iframes)
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    
+    // Try to open in new window first, then fallback to download
+    try {
+      const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+      if(newWindow) {
+        newWindow.focus();
+        hideLoad();
+      } else {
+        // Fallback: trigger download
+        document.body.appendChild(link);
         link.click();
-      };
-      reader.readAsDataURL(blob);
-    } else {
-      // Chrome, Firefox, etc.
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      link.style.display = "none";
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        hideLoad();
+      }
+    } catch(e) {
+      // Last resort: direct download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+      hideLoad();
     }
-    
-    hideLoad();
 
   }catch(err){ 
     hideLoad(); 
     console.error("Export error:", err);
-    alert("Export error: "+err.message+". Please try again or download from GitHub Pages version."); 
+    alert("Export error: "+err.message); 
   }
   },100);
 }
-
 // ── INIT ────────────────────────────────────────────────────────────
 const saved=getPAT();
 if(saved){

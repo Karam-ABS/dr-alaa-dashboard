@@ -1141,7 +1141,7 @@ function downloadExcel(){
       toast.innerHTML = `
         <div style="font-size:15px;font-weight:600;margin-bottom:6px;color:var(--text)">⬇ Export Ready</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Azure DevOps blocks file downloads inside embedded widgets.<br>Open the dashboard directly to export your Excel report.</div>
-        <a href="https://karam-abs.github.io/dr-alaa-dashboard" target="_blank" rel="noopener" style="display:inline-block;padding:9px 22px;background:var(--blue);color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;">Open Dashboard ↗</a>
+        <button onclick="try{window.top.location.href='https://karam-abs.github.io/dr-alaa-dashboard';}catch(e){window.location.href='https://karam-abs.github.io/dr-alaa-dashboard';}" style="display:inline-block;padding:9px 22px;background:var(--blue);color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit;">Open Dashboard ↗</button>
         <button onclick="this.closest('div[style]').remove()" style="display:block;margin:10px auto 0;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;">Dismiss</button>
       `;
       document.body.appendChild(toast);

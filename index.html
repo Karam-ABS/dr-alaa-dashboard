@@ -452,6 +452,7 @@ body {
 
 <script>
 const ORG="ADVBUSSOL",PROJECT="ABS-Central";
+const WORKER_URL="https://dawn-wildflower-2476.kalbataineh.workers.dev";
 const COLORS=["#4d9fff","#00d4a0","#ffb347","#9d7fff","#ff6b6b","#00c48a","#c98500","#79d7ff","#ff79c6","#ffaa5a"];
 const TYPE_COLORS={Epic:"#9d7fff",Feature:"#4d9fff","User Story":"#00d4a0",Task:"#ffb347",Issue:"#ff6b6b",CR:"#ff79c6"};
 
@@ -1133,51 +1134,70 @@ function downloadExcel(){
     const inIframe = window.self !== window.top;
 
     if(inIframe){
-      // Azure DevOps iframe blocks downloads and popups
-      // Show a toast with a link to open dashboard directly
-      hideLoad();
-      hideLoad();
+      // Send data to Cloudflare Worker which returns a real file URL
       URL.revokeObjectURL(url);
-      // Everything is blocked by Azure DevOps sandbox.
-      // Only option: show URL clearly so user can copy/paste it
-      const dashURL = "https://karam-abs.github.io/dr-alaa-dashboard";
-      const overlay = document.createElement("div");
-      overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;";
-      overlay.innerHTML = `
-        <div style="background:var(--s1);border:1px solid var(--border-strong);border-radius:16px;padding:32px;width:500px;max-width:95vw;text-align:center;">
-          <div style="font-size:32px;margin-bottom:12px;">📋</div>
-          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;">To Export — Open Dashboard Directly</div>
-          <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;">Azure DevOps blocks all downloads inside widgets.<br>Copy the URL below → paste it in your browser address bar → press Enter → then click Export.</div>
-          <div style="display:flex;align-items:center;gap:8px;background:var(--s2);border:2px solid var(--blue);border-radius:10px;padding:10px 14px;margin-bottom:16px;">
-            <input id="export-url-inp" value="${dashURL}" readonly
-              style="flex:1;background:transparent;border:none;color:var(--blue);font-size:13px;font-weight:600;font-family:monospace;outline:none;cursor:pointer;"
-              onclick="this.select();"
-            />
-            <button onclick="
-              const inp=document.getElementById('export-url-inp');
-              inp.select();
-              try{
-                navigator.clipboard.writeText(inp.value).then(()=>{
-                  this.textContent='✓ Copied!';
-                  this.style.background='var(--green)';
-                  setTimeout(()=>{this.textContent='Copy';this.style.background='var(--blue)';},2500);
-                });
-              }catch(e){
-                document.execCommand('copy');
-                this.textContent='✓ Copied!';
-                this.style.background='var(--green)';
-                setTimeout(()=>{this.textContent='Copy';this.style.background='var(--blue)';},2500);
-              }
-            " style="padding:6px 14px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Copy</button>
+      showLoad("Preparing export...");
+      try{
+        // Build payload
+        const devItems={};
+        STATE.rawItems.forEach(wi=>{
+          const a=wi.fields["System.AssignedTo"];
+          if(!a)return;
+          const name=a.displayName.replace(" ABS","").trim();
+          if(!devItems[name])devItems[name]=[];
+          devItems[name].push({
+            id:wi.id,
+            title:wi.fields["System.Title"]||"",
+            state:wi.fields["System.State"]||"",
+            type:wi.fields["System.WorkItemType"]||"",
+            changed:wi.fields["System.ChangedDate"]?new Date(wi.fields["System.ChangedDate"]).toLocaleDateString():"",
+            created:wi.fields["System.CreatedDate"]?new Date(wi.fields["System.CreatedDate"]).toLocaleDateString():"",
+          });
+        });
+        const sorted2=[...STATE.devs].sort((a,b)=>b.total-a.total);
+        const payload={
+          date:new Date().toLocaleString(),
+          dateRange:(document.getElementById('date-from').value||"")+" to "+(document.getElementById('date-to').value||""),
+          devs:sorted2.map(d=>({...d,items:devItems[d.name]||[]})),
+          types:STATE.types,
+          overdue:STATE.overdue,
+        };
+        const resp=await fetch(WORKER_URL,{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify(payload)
+        });
+        if(!resp.ok)throw new Error("Worker error "+resp.status);
+        const blob2=await resp.blob();
+        const url2=URL.createObjectURL(blob2);
+        const a2=document.createElement("a");
+        a2.href=url2;
+        a2.download="ABS-Intelligence-"+new Date().toISOString().split("T")[0]+".xls";
+        document.body.appendChild(a2);
+        a2.click();
+        document.body.removeChild(a2);
+        setTimeout(()=>URL.revokeObjectURL(url2),1000);
+        hideLoad();
+      }catch(workerErr){
+        hideLoad();
+        console.error("Worker export failed:",workerErr);
+        // Fallback: show copy URL modal
+        const dashURL="https://karam-abs.github.io/dr-alaa-dashboard";
+        const overlay=document.createElement("div");
+        overlay.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;";
+        overlay.innerHTML=`<div style="background:var(--s1);border:1px solid var(--border-strong);border-radius:16px;padding:32px;width:480px;max-width:95vw;text-align:center;">
+          <div style="font-size:28px;margin-bottom:12px;">⬇</div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Open Dashboard to Export</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Copy the URL below and open it in a new browser tab, then click Export.</div>
+          <div style="display:flex;align-items:center;gap:8px;background:var(--s2);border:2px solid var(--blue);border-radius:10px;padding:10px 14px;margin-bottom:14px;">
+            <input id="exp-url" value="${dashURL}" readonly onclick="this.select()" style="flex:1;background:transparent;border:none;color:var(--blue);font-size:12px;font-weight:600;font-family:monospace;outline:none;"/>
+            <button onclick="document.getElementById('exp-url').select();try{navigator.clipboard.writeText('${dashURL}').then(()=>{this.textContent='✓ Copied!';this.style.background='var(--green)';setTimeout(()=>{this.textContent='Copy';this.style.background='var(--blue)';},2500)});}catch(e){document.execCommand('copy');this.textContent='✓ Copied!';this.style.background='var(--green)';setTimeout(()=>{this.textContent='Copy';this.style.background='var(--blue)';},2500);}" style="padding:6px 14px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Copy</button>
           </div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Tip: You can also bookmark the dashboard URL in your browser for quick access.</div>
-          <button onclick="this.closest('div[style*=inset]').remove();"
-            style="padding:9px 24px;background:var(--s3);color:var(--text);border:1px solid var(--border-strong);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:500;">
-            Close
-          </button>
+          <button onclick="this.closest('div[style*=inset]').remove()" style="padding:8px 24px;background:var(--s3);color:var(--text);border:1px solid var(--border-strong);border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">Close</button>
         </div>`;
-      document.body.appendChild(overlay);
-    } else {
+        document.body.appendChild(overlay);
+      }
+        } else {
       // Normal browser - direct download
       const link = document.createElement('a');
       link.href = url;

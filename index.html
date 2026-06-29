@@ -1133,11 +1133,9 @@ function downloadExcel(){
     const url = URL.createObjectURL(blob);
     const inIframe = window.self !== window.top;
 
-    if(inIframe){
-      // Send data to Cloudflare Worker which returns a real file URL
-      URL.revokeObjectURL(url);
-      showLoad("Preparing export...");
-      try{
+    // Always try worker first for colored Excel, fallback to blob if it fails
+    showLoad("Preparing export...");
+    try{
         // Build payload
         const devItems={};
         STATE.rawItems.forEach(wi=>{
@@ -1180,8 +1178,20 @@ function downloadExcel(){
         hideLoad();
       }catch(workerErr){
         hideLoad();
-        console.error("Worker export failed:",workerErr);
-        // Fallback: show copy URL modal
+        console.error("Worker export failed:",workerErr.message);
+        alert("Worker error: "+workerErr.message);
+        if(!inIframe){
+          // Fallback to blob download in normal browser
+          const link=document.createElement('a');
+          link.href=url;
+          link.download=filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(()=>URL.revokeObjectURL(url),100);
+          return;
+        }
+        // In iframe: show copy URL modal
         const dashURL="https://karam-abs.github.io/dr-alaa-dashboard";
         const overlay=document.createElement("div");
         overlay.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;";
@@ -1197,17 +1207,7 @@ function downloadExcel(){
         </div>`;
         document.body.appendChild(overlay);
       }
-        } else {
-      // Normal browser - direct download
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(url), 100);
-      hideLoad();
-    }
+    
 
   }catch(err){ 
     hideLoad(); 

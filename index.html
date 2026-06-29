@@ -933,35 +933,34 @@ function downloadExcel(){
       return row;
     }
 
-function metaRow(ws, label, value, cols){
-  const row = ws.addRow([label, value]);
-  row.height = 24;  // ← Increased from 16 to 24
-  styleCell(row.getCell(1), FILLS.meta, FONTS.metaK, "left", false);
-  styleCell(row.getCell(2), FILLS.meta, FONTS.metaV, "left", true);  // ← Added true for wrapText
-  ws.mergeCells(row.number, 2, row.number, cols);
-}
+    function metaRow(ws, label, value, cols){
+      const row = ws.addRow([label, value]);
+      row.height = 24;
+      styleCell(row.getCell(1), FILLS.meta, FONTS.metaK, "left", false);
+      styleCell(row.getCell(2), FILLS.meta, FONTS.metaV, "left", true);
+      ws.mergeCells(row.number, 2, row.number, cols);
+    }
 
-function blankRow(ws, cols){
-  const row = ws.addRow([""]);
-  row.height = 14;  // ← Increased from 6 to 14
-  const c = row.getCell(1);
-  styleCell(c, FILLS.blank, FONTS.normal);
-  ws.mergeCells(row.number, 1, row.number, cols);
-  // Fill all cells in the row with the blank color
-  for(let i = 1; i <= cols; i++){
-    const cell = row.getCell(i);
-    cell.fill = FILLS.blank;
-    cell.border = bdr;
-  }
-}
+    function blankRow(ws, cols){
+      const row = ws.addRow([""]);
+      row.height = 14;
+      const c = row.getCell(1);
+      styleCell(c, FILLS.blank, FONTS.normal);
+      ws.mergeCells(row.number, 1, row.number, cols);
+      for(let i = 1; i <= cols; i++){
+        const cell = row.getCell(i);
+        cell.fill = FILLS.blank;
+        cell.border = bdr;
+      }
+    }
 
     // ══════════════════════════════════════════════════════════════
     // SHEET 1 — TEAM SUMMARY
     // ══════════════════════════════════════════════════════════════
-const ws1 = wb.addWorksheet("Team Summary", {views:[{showGridLines:false}]});
-ws1.columns = [
-  {width:8},{width:40},{width:14},{width:14},{width:50},{width:8},{width:8},{width:8}
-];
+    const ws1 = wb.addWorksheet("Team Summary", {views:[{showGridLines:false}]});
+    ws1.columns = [
+      {width:8},{width:40},{width:14},{width:14},{width:50},{width:8},{width:8},{width:8}
+    ];
 
     titleRow(ws1, "ABS-Central — Development Intelligence Report", 8, 30);
     metaRow(ws1, "Report Generated", now2.toLocaleString(), 8);
@@ -1030,8 +1029,8 @@ ws1.columns = [
         return a&&a.displayName.replace(" ABS","").trim()===dev.name;
       });
       const sn=dev.name.split(" ")[0].substring(0,31);
-const dws=wb.addWorksheet(sn,{views:[{showGridLines:false}]});
-dws.columns=[{width:12},{width:65},{width:14},{width:14},{width:20},{width:20}];
+      const dws=wb.addWorksheet(sn,{views:[{showGridLines:false}]});
+      dws.columns=[{width:8},{width:65},{width:14},{width:14},{width:16},{width:16}];
 
       titleRow(dws, dev.name, 6, 30);
       metaRow(dws,"Date Range",dateRange,6);
@@ -1117,23 +1116,49 @@ dws.columns=[{width:12},{width:65},{width:14},{width:14},{width:20},{width:20}];
       styleCell(row.getCell(3),rf,FONTS.normal,"center");
     });
 
-    // ── DOWNLOAD ────────────────────────────────────────────────
+    // ── DOWNLOAD WITH AZURE DEVOPS FIX ────────────────────────────
+    showLoad("Generating download...");
     const buf = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "ABS-Intelligence-"+now2.toISOString().split("T")[0]+".xlsx";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const filename = "ABS-Intelligence-"+now2.toISOString().split("T")[0]+".xlsx";
+    
+    // Try multiple download methods for compatibility
+    if(navigator.msSaveBlob) {
+      // IE/Edge
+      navigator.msSaveBlob(blob, filename);
+    } else if(navigator.userAgent.indexOf("Safari") > -1 && navigator.userAgent.indexOf("Chrome") === -1) {
+      // Safari
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const url = e.target.result;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+      };
+      reader.readAsDataURL(blob);
+    } else {
+      // Chrome, Firefox, etc.
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+    
     hideLoad();
 
-  }catch(err){ hideLoad(); alert("Export error: "+err.message); }
+  }catch(err){ 
+    hideLoad(); 
+    console.error("Export error:", err);
+    alert("Export error: "+err.message+". Please try again or download from GitHub Pages version."); 
+  }
   },100);
 }
-
 
 // ── INIT ────────────────────────────────────────────────────────────
 const saved=getPAT();

@@ -3,271 +3,372 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Dr. Alaa — ABS Development Dashboard</title>
+<title>Dr. Alaa — ABS Intelligence</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
---bg:#f8f7f4;--s1:#ffffff;--s2:#f1f0ec;--s3:#e8e7e3;
---text:#0b0b0b;--muted:#898781;--sub:#52514e;
---border:rgba(11,11,11,0.1);--border-strong:rgba(11,11,11,0.2);
---blue:#2a78d6;--green:#1baf7a;--amber:#eda100;--red:#e34948;--violet:#4a3aa7;
+--bg:#f4f4f8;--s1:#ffffff;--s2:#f0f0f5;--s3:#e8e8f0;--s4:#e0e0ea;
+--text:#0a0a1a;--muted:#8888a8;--sub:#5a5a7a;
+--border:rgba(0,0,0,0.08);--border-strong:rgba(0,0,0,0.15);
+--blue:#2a78d6;--green:#00b887;--amber:#d4920a;--red:#e03030;--violet:#7a4fd6;--pink:#d654a8;--cyan:#2aa8d6;
+--glow-blue:rgba(42,120,214,0.1);--glow-green:rgba(0,184,135,0.1);--glow-amber:rgba(212,146,10,0.1);--glow-red:rgba(224,48,48,0.1);
 }
 [data-mode=dark]{
---bg:#111110;--s1:#1a1a19;--s2:#222221;--s3:#2a2a28;
---text:#ffffff;--muted:#898781;--sub:#c3c2b7;
---border:rgba(255,255,255,0.1);--border-strong:rgba(255,255,255,0.2);
---blue:#3987e5;--green:#199e70;--amber:#c98500;--red:#e66767;--violet:#9085e9;
+--bg:#111827;--s1:#1f2937;--s2:#374151;--s3:#4b5563;--s4:#6b7280;
+--text:#f3f4f6;--muted:#9ca3af;--sub:#d1d5db;
+--border:rgba(255,255,255,0.12);--border-strong:rgba(255,255,255,0.2);
+--blue:#60a5fa;--green:#34d399;--amber:#fbbf24;--red:#f87171;--violet:#c084fc;--pink:#f472b6;--cyan:#67e8f9;
+--glow-blue:rgba(96,165,250,0.15);--glow-green:rgba(52,211,153,0.15);--glow-amber:rgba(251,191,36,0.15);--glow-red:rgba(248,113,113,0.15);
+--cyan:#2dd4bf;
 }
-html,body{height:100%;overflow-y:auto;}
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;}
+html,body{min-height:100%;background:var(--bg);}
+body{color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;overflow-x:hidden;}
 
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:0.5px solid var(--border);background:var(--s1);position:sticky;top:0;z-index:50;}
-.topbar-left .title{font-size:16px;font-weight:500;letter-spacing:-0.01em;}
-.topbar-left .sub{font-size:12px;color:var(--muted);margin-top:3px;}
-.topbar-right{display:flex;align-items:center;gap:10px;}
-.btn{padding:6px 14px;border:0.5px solid var(--border-strong);border-radius:6px;background:transparent;color:var(--text);font-size:12px;cursor:pointer;font-family:inherit;}
-.btn:hover{background:var(--s2);}
-.live{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 2s infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+/* ANIMATED BG */
+.bg-mesh{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.bg-mesh::before{content:'';position:absolute;width:800px;height:800px;background:radial-gradient(circle,rgba(42,120,214,0.05) 0%,transparent 70%);top:-200px;right:-200px;animation:drift 20s ease-in-out infinite alternate;}
+.bg-mesh::after{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(0,184,135,0.05) 0%,transparent 70%);bottom:-100px;left:-100px;animation:drift 15s ease-in-out infinite alternate-reverse;}
+[data-mode=dark] .bg-mesh::before{background:radial-gradient(circle,rgba(77,159,255,0.04) 0%,transparent 70%);}
+[data-mode=dark] .bg-mesh::after{background:radial-gradient(circle,rgba(0,212,160,0.04) 0%,transparent 70%);}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,30px) scale(1.1)}}
 
-.page{max-width:1320px;margin:0 auto;padding:32px;}
-.gap{display:flex;flex-direction:column;gap:36px;}
-.section-label{font-size:11px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:var(--s1);border-bottom:1px solid var(--border-strong);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-brand{display:flex;align-items:center;gap:12px;}
+.topbar-logo{height:28px;padding:0 10px;border-radius:6px;background:var(--text);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--bg);letter-spacing:0.04em;}
+.topbar-title{font-size:13px;font-weight:600;letter-spacing:-0.01em;}
+.topbar-sub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:6px;}
+.topbar-right{display:flex;align-items:center;gap:6px;}
+.tbtn{height:30px;padding:0 12px;border:0.5px solid var(--border-strong);border-radius:6px;background:var(--s1);color:var(--sub);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:all 0.15s;white-space:nowrap;}
+.tbtn:hover{background:var(--s2);border-color:var(--border-strong);color:var(--text);}
+.tbtn.primary{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600;}
+.tbtn.primary:hover{opacity:0.85;}
+.live-pill{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;border:0.5px solid rgba(0,212,160,0.3);background:rgba(0,212,160,0.08);font-size:11px;color:var(--green);}
+.date-range{display:flex;align-items:center;gap:8px;padding:4px 12px;border:0.5px solid var(--border-strong);border-radius:8px;background:var(--s2);font-size:12px;}
+.date-range label{color:var(--muted);font-size:11px;}
+.date-range input[type=date]{background:transparent;border:none;color:var(--text);font-size:12px;font-family:inherit;outline:none;cursor:pointer;}
+.date-range input[type=date]::-webkit-calendar-picker-indicator{opacity:0.5;cursor:pointer;filter:var(--date-icon-filter,none);}
+[data-mode=dark] .date-range input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);}
+.date-sep{color:var(--muted);}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.8)}}
 
-/* BRIEFING */
-.briefing{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;padding:24px 28px;display:flex;gap:24px;align-items:flex-start;}
-.briefing-icon{font-size:28px;flex-shrink:0;margin-top:2px;}
-.briefing-content{}
-.briefing-title{font-size:13px;font-weight:500;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;}
-.briefing-text{font-size:15px;line-height:1.7;color:var(--text);}
-.briefing-text strong{font-weight:500;}
+/* PAGE */
+.page{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:32px;}
+.gap{display:flex;flex-direction:column;gap:32px;}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.section-label{font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px;}
+.section-label::before{content:'';display:inline-block;width:3px;height:14px;border-radius:2px;background:linear-gradient(to bottom,var(--blue),var(--violet));}
 
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;}
-.kpi{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;padding:20px 18px;}
-.kpi .label{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:10px;}
-.kpi .val{font-size:32px;font-weight:500;letter-spacing:-0.02em;line-height:1;}
-.kpi .hint{font-size:11px;color:var(--muted);margin-top:6px;}
-.val.amber{color:var(--amber);}
-.val.green{color:var(--green);}
-.val.blue{color:var(--blue);}
-.val.red{color:var(--red);}
+.kpi{background:var(--s1);border:0.5px solid var(--border);border-radius:16px;padding:20px;position:relative;overflow:hidden;cursor:default;transition:transform 0.3s,border-color 0.3s;animation:fadeUp 0.6s ease both;}
+.kpi:hover{transform:translateY(-3px);border-color:var(--border-strong);}
+.kpi::before{content:'';position:absolute;inset:0;border-radius:16px;opacity:0;transition:opacity 0.3s;}
+.kpi.blue::before{background:var(--glow-blue);}
+.kpi.green::before{background:var(--glow-green);}
+.kpi.amber::before{background:var(--glow-amber);}
+.kpi.red::before{background:var(--glow-red);}
+.kpi.violet::before{background:rgba(154,79,214,0.1);}
+.kpi.cyan::before{background:rgba(20,184,166,0.1);}
+.kpi:hover::before{opacity:1;}
+.kpi-accent{position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 16px 0 60px;opacity:0.08;}
+.kpi.blue .kpi-accent{background:var(--blue);}
+.kpi.green .kpi-accent{background:var(--green);}
+.kpi.amber .kpi-accent{background:var(--amber);}
+.kpi.red .kpi-accent{background:var(--red);}
+.kpi.violet .kpi-accent{background:var(--violet);}
+.kpi.cyan .kpi-accent{background:var(--cyan);}
+.kpi-val.cyan{color:var(--cyan);}
+.kpi-val.violet{color:var(--violet);}
+.kpi-label{font-size:10px;color:var(--muted);font-weight:500;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;}
+.kpi-val{font-size:36px;font-weight:600;letter-spacing:-0.03em;line-height:1;}
+.kpi-val.blue{color:var(--blue);}
+.kpi-val.green{color:var(--green);}
+.kpi-val.amber{color:var(--amber);}
+.kpi-val.red{color:var(--red);}
+.kpi-val.violet{color:var(--violet);}
+.kpi-hint{font-size:11px;color:var(--muted);margin-top:8px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
-/* CHARTS */
-.charts-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
-.charts-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.card{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;padding:22px;}
-.card .ctitle{font-size:13px;font-weight:500;margin-bottom:3px;}
-.card .csub{font-size:11px;color:var(--muted);margin-bottom:18px;}
+/* CARDS */
+.card{background:var(--s1);border:0.5px solid var(--border);border-radius:16px;padding:24px;transition:border-color 0.3s;animation:fadeUp 0.6s ease both;}
+.card:hover{border-color:var(--border-strong);}
+.ctitle{font-size:13px;font-weight:500;margin-bottom:3px;}
+.csub{font-size:11px;color:var(--muted);margin-bottom:20px;}
 .chart-wrap{position:relative;width:100%;}
 .legend{display:flex;gap:14px;margin-top:14px;flex-wrap:wrap;}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub);}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sub);}
 .legend-sq{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
 
+/* GRID LAYOUTS */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:16px;}
+
+/* STAT ROW inside card */
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.stat-mini{background:var(--s2);border-radius:10px;padding:14px;text-align:center;}
+.stat-mini-val{font-size:22px;font-weight:600;line-height:1;}
+.stat-mini-label{font-size:10px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:0.04em;}
+
+/* VELOCITY METRICS */
+.velocity-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.vel-box{background:var(--s2);border-radius:10px;padding:14px 12px;text-align:center;}
+.vel-val{font-size:20px;font-weight:600;color:var(--green);}
+.vel-label{font-size:10px;color:var(--muted);margin-top:3px;}
+
 /* LEADERBOARD */
-.leaderboard{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
-.lb-card{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;padding:18px 20px;display:flex;align-items:center;gap:14px;}
-.lb-rank{font-size:22px;font-weight:500;color:var(--muted);min-width:32px;}
-.lb-rank.gold{color:#c98500;}
-.lb-rank.silver{color:#898781;}
-.lb-rank.bronze{color:#a0522d;}
-.lb-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0;}
+.lb-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.lb-item{background:var(--s1);border:0.5px solid var(--border);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:14px;transition:all 0.25s;position:relative;overflow:hidden;}
+.lb-item:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08);border-color:var(--border-strong);}
+.lb-item.top{border-color:rgba(255,215,0,0.25);background:linear-gradient(135deg,var(--s1) 0%,rgba(255,215,0,0.03) 100%);}
+.lb-rank-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:44px;}
+.lb-rank{font-size:22px;font-weight:700;line-height:1;}
+.lb-rank.r1{color:#c9960a;}
+.lb-rank.r2{color:#909090;}
+.lb-rank.r3{color:#a0622a;}
+.lb-rank.r4,.lb-rank.r5,.lb-rank.r6{color:var(--muted);font-size:16px;}
+.lb-rank-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;}
+.lb-av{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;}
 .lb-info{flex:1;}
-.lb-name{font-size:13px;font-weight:500;}
-.lb-detail{font-size:11px;color:var(--muted);margin-top:2px;}
-.lb-closed{font-size:22px;font-weight:500;color:var(--green);}
+.lb-name{font-size:14px;font-weight:600;margin-bottom:4px;}
+.lb-detail{font-size:11px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;}
+.lb-detail-tag{display:flex;align-items:center;gap:4px;}
+.lb-val-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.lb-val{font-size:28px;font-weight:700;color:var(--green);line-height:1;}
+.lb-val-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;}
 
 /* OVERDUE */
 .overdue-list{display:flex;flex-direction:column;gap:10px;}
-.overdue-item{background:var(--s1);border:0.5px solid var(--border);border-left:3px solid var(--red);border-radius:0 10px 10px 0;padding:14px 18px;display:flex;align-items:center;gap:16px;}
-.overdue-days{font-size:13px;font-weight:500;color:var(--red);min-width:60px;}
-.overdue-info{flex:1;}
-.overdue-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:500px;}
-.overdue-dev{font-size:11px;color:var(--muted);margin-top:2px;}
-.overdue-empty{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;padding:24px;text-align:center;color:var(--muted);font-size:13px;}
+.overdue-item{background:var(--s1);border:0.5px solid var(--border);border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:16px;transition:all 0.25s;animation:fadeUp 0.4s ease both;}
+.overdue-item:hover{transform:translateX(4px);border-color:rgba(255,107,107,0.4);box-shadow:0 4px 16px rgba(255,107,107,0.08);}
+.overdue-badge{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:64px;background:rgba(255,107,107,0.08);border:0.5px solid rgba(255,107,107,0.2);border-radius:10px;padding:8px 6px;}
+.overdue-days-num{font-size:20px;font-weight:700;color:var(--red);line-height:1;}
+.overdue-days-label{font-size:9px;color:var(--red);opacity:0.7;text-transform:uppercase;letter-spacing:0.04em;}
+.overdue-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px;margin-bottom:5px;}
+.overdue-meta{display:flex;align-items:center;gap:8px;}
+.overdue-dev{font-size:11px;color:var(--muted);}
+.overdue-type-tag{font-size:10px;padding:2px 8px;border-radius:6px;font-weight:500;}
+.overdue-empty{background:var(--s1);border:0.5px solid var(--border);border-radius:16px;padding:36px;text-align:center;color:var(--muted);font-size:13px;}
+.overdue-empty-icon{font-size:32px;margin-bottom:10px;color:var(--green);}
+.overdue-empty-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;}
 
-/* TYPE BREAKDOWN */
-.type-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
-.type-card{background:var(--s1);border:0.5px solid var(--border);border-radius:10px;padding:16px;text-align:center;}
-.type-val{font-size:28px;font-weight:500;margin-bottom:4px;}
-.type-label{font-size:11px;color:var(--muted);font-weight:500;}
-.type-bar{height:4px;border-radius:2px;margin-top:10px;}
+/* TYPE GRID */
+.type-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+.type-card{background:var(--s1);border:0.5px solid var(--border);border-radius:16px;padding:22px 18px;display:flex;flex-direction:column;gap:0;transition:all 0.3s;cursor:default;position:relative;overflow:hidden;}
+.type-card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,0.1);border-color:var(--border-strong);}
+.type-card-accent{position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;}
+.type-val{font-size:40px;font-weight:600;line-height:1;margin-bottom:6px;letter-spacing:-0.02em;}
+.type-label{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:12px;}
+.type-pct-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.type-pct{font-size:11px;font-weight:600;}
+.type-prog{height:4px;border-radius:2px;background:var(--s2);overflow:hidden;}
+.type-prog-fill{height:100%;border-radius:2px;transition:width 1s ease;}
 
 /* TABLE */
-.table-wrap{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
+.table-wrap{background:var(--s1);border:0.5px solid var(--border);border-radius:16px;overflow:hidden;}
+.table-header{padding:16px 24px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--s2);}
+.table-title{font-size:13px;font-weight:500;}
 table{width:100%;border-collapse:collapse;}
-th{padding:11px 20px;text-align:left;font-size:11px;font-weight:500;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;border-bottom:0.5px solid var(--border);background:var(--s2);}
+th{padding:11px 20px;text-align:left;font-size:10px;font-weight:500;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;border-bottom:0.5px solid var(--border);background:var(--s2);}
 td{padding:13px 20px;border-bottom:0.5px solid var(--border);font-size:13px;vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
+tr{transition:background 0.15s;}
 tr:hover td{background:var(--s2);}
+.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;}
 .dev-cell{display:flex;align-items:center;gap:10px;}
-.av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;}
 .bar-wrap{display:flex;align-items:center;gap:8px;}
-.bar-bg{width:90px;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;}
-.bar-fill{height:100%;border-radius:3px;}
-.pill{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:500;}
-.pill.g{background:rgba(27,175,122,0.12);color:var(--green);}
-.pill.a{background:rgba(237,161,0,0.12);color:var(--amber);}
-.pill.r{background:rgba(227,73,72,0.12);color:var(--red);}
+.bar-bg{width:80px;height:4px;background:var(--s3);border-radius:2px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:2px;transition:width 0.8s ease;}
+.pill{display:inline-block;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:500;}
+.pill.g{background:rgba(0,212,160,0.12);color:var(--green);}
+.pill.a{background:rgba(255,179,71,0.12);color:var(--amber);}
+.pill.r{background:rgba(255,107,107,0.12);color:var(--red);}
 .c-amber{color:var(--amber);font-weight:500;}
 .c-green{color:var(--green);font-weight:500;}
 .c-blue{color:var(--blue);font-weight:500;}
+.c-red{color:var(--red);}
 
 /* DEV CARDS */
 .dev-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
-.dev-card{background:var(--s1);border:0.5px solid var(--border);border-radius:12px;padding:18px;}
-.dev-card-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.dev-card{background:var(--s1);border:0.5px solid var(--border);border-radius:16px;padding:20px;transition:all 0.3s;animation:fadeUp 0.6s ease both;}
+.dev-card:hover{transform:translateY(-4px);border-color:var(--border-strong);box-shadow:0 12px 40px rgba(0,0,0,0.3);}
+.dev-card-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.dev-card-av{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#fff;flex-shrink:0;}
 .dev-card-name{font-size:13px;font-weight:500;}
-.dev-card-total{font-size:11px;color:var(--muted);margin-top:1px;}
-.mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.dev-card-total{font-size:11px;color:var(--muted);margin-top:2px;}
+.mini-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
 .mini{background:var(--s2);border-radius:8px;padding:10px 4px;text-align:center;}
-.mini-n{font-size:18px;font-weight:500;line-height:1;}
-.mini-l{font-size:10px;color:var(--muted);margin-top:3px;}
+.mini-n{font-size:18px;font-weight:600;line-height:1;}
+.mini-l{font-size:9px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:0.04em;}
 .mini-n.am{color:var(--amber);}
 .mini-n.gn{color:var(--green);}
 .mini-n.bl{color:var(--blue);}
-.prog{height:5px;background:var(--s2);border-radius:3px;overflow:hidden;}
-.prog-fill{height:100%;border-radius:3px;}
+.prog{height:4px;background:var(--s3);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:2px;transition:width 1s ease;}
 .prog-label{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:5px;}
 
-.footer{text-align:center;font-size:11px;color:var(--muted);padding:24px 0 32px;border-top:0.5px solid var(--border);margin-top:8px;}
+/* FOOTER */
+.footer{text-align:center;font-size:11px;color:var(--muted);padding:28px 0 40px;border-top:0.5px solid var(--border);margin-top:12px;}
 
 /* MODAL */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;align-items:center;justify-content:center;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:200;align-items:center;justify-content:center;}
 .overlay.open{display:flex;}
-.modal{background:var(--s1);border:0.5px solid var(--border-strong);border-radius:14px;padding:36px;width:420px;max-width:90vw;}
-.modal h2{font-size:17px;font-weight:500;margin-bottom:8px;}
-.modal p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:22px;}
-.modal input{width:100%;padding:11px 14px;background:var(--s2);border:0.5px solid var(--border-strong);border-radius:8px;color:var(--text);font-size:13px;margin-bottom:12px;outline:none;font-family:inherit;}
+.modal{background:var(--s1);border:0.5px solid var(--border-strong);border-radius:20px;padding:40px;width:440px;max-width:90vw;animation:modalIn 0.3s ease;}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-logo{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--violet));margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;}
+.modal h2{font-size:18px;font-weight:600;margin-bottom:8px;text-align:center;}
+.modal p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:24px;text-align:center;}
+.modal input{width:100%;padding:12px 16px;background:var(--s2);border:0.5px solid var(--border-strong);border-radius:10px;color:var(--text);font-size:13px;margin-bottom:12px;outline:none;font-family:inherit;transition:border-color 0.2s;}
 .modal input:focus{border-color:var(--blue);}
-.mbtn{width:100%;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;}
-.mskip{width:100%;padding:8px;background:transparent;color:var(--muted);border:none;font-size:12px;cursor:pointer;margin-top:8px;font-family:inherit;}
+.mbtn{width:100%;padding:13px;background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:opacity 0.2s;}
+.mbtn:hover{opacity:0.88;}
+.mskip{width:100%;padding:10px;background:transparent;color:var(--muted);border:none;font-size:12px;cursor:pointer;margin-top:8px;font-family:inherit;}
 .mskip:hover{color:var(--text);}
 
-.loading{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+/* LOADING */
+.loading{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(12px);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
 .loading.show{display:flex;}
-.spinner{width:34px;height:34px;border:2.5px solid rgba(255,255,255,0.15);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;}
+.spinner{width:40px;height:40px;border:2.5px solid rgba(255,255,255,0.1);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
-.load-txt{color:rgba(255,255,255,0.6);font-size:13px;}
+.load-txt{color:rgba(255,255,255,0.5);font-size:13px;}
+.load-prog{width:200px;height:2px;background:rgba(255,255,255,0.1);border-radius:1px;overflow:hidden;}
+.load-prog-fill{height:100%;background:linear-gradient(to right,var(--blue),var(--violet));border-radius:1px;animation:loadprog 2s ease infinite;}
+@keyframes loadprog{0%{width:0%}50%{width:70%}100%{width:100%}}
 
-@media(max-width:1100px){
+/* RESPONSIVE */
+@media(max-width:1200px){
   .kpi-grid{grid-template-columns:repeat(3,1fr);}
-  .charts-grid,.charts-grid-2{grid-template-columns:1fr 1fr;}
+  .grid-3{grid-template-columns:1fr 1fr;}
   .dev-cards{grid-template-columns:repeat(3,1fr);}
-  .leaderboard{grid-template-columns:1fr 1fr;}
-  .type-grid{grid-template-columns:repeat(3,1fr);}
+  .lb-grid{grid-template-columns:1fr;}
 }
-@media(max-width:700px){
+@media(max-width:768px){
   .kpi-grid{grid-template-columns:repeat(2,1fr);}
-  .charts-grid,.charts-grid-2{grid-template-columns:1fr;}
+  .grid-3,.grid-2,.grid-2-1{grid-template-columns:1fr;}
   .dev-cards{grid-template-columns:repeat(2,1fr);}
-  .leaderboard{grid-template-columns:1fr;}
   .type-grid{grid-template-columns:repeat(2,1fr);}
+  .velocity-metrics{grid-template-columns:repeat(2,1fr);}
 }
 </style>
 </head>
 <body>
+<div class="bg-mesh"></div>
 
+<!-- LOADING -->
 <div class="loading" id="loading">
   <div class="spinner"></div>
-  <div class="load-txt" id="load-txt">Fetching live data...</div>
+  <div class="load-txt" id="load-txt">Connecting to Azure DevOps...</div>
+  <div class="load-prog"><div class="load-prog-fill"></div></div>
 </div>
 
+<!-- PAT MODAL -->
 <div class="overlay" id="overlay">
   <div class="modal">
-    <h2>Connect to Azure DevOps</h2>
-    <p>Enter your Personal Access Token to load live data. It stays in your browser session only and is never stored or sent elsewhere.</p>
-    <input type="password" id="pat-input" placeholder="Paste your PAT here..."/>
-    <button class="mbtn" onclick="savePATAndLoad()">Load live dashboard</button>
+    <div class="modal-logo">A</div>
+    <h2>ABS Development Intelligence</h2>
+    <p>Enter your Azure DevOps Personal Access Token to load live data. Stored in your session only.</p>
+    <input type="password" id="pat-input" placeholder="Paste your PAT here..." oninput="document.getElementById('pat-error').style.display='none'"/>
+    <div id="pat-error" style="display:none;color:var(--red);font-size:12px;margin:-4px 0 8px;padding:8px 12px;background:rgba(224,48,48,0.08);border-radius:8px;border:0.5px solid var(--red);"></div>
+    <button class="mbtn" onclick="savePATAndLoad()">Connect & Load Dashboard</button>
     <button class="mskip" onclick="closeModal()">Continue with cached data</button>
   </div>
 </div>
 
+<!-- TOPBAR -->
 <div class="topbar">
-  <div class="topbar-left">
-    <div class="title">ABS-Central — Development Intelligence</div>
-    <div class="sub" id="ts">Showing cached data</div>
-  </div>
-  <div class="topbar-right">
-    <div class="live"><span class="live-dot"></span>Live</div>
-    <button class="btn" onclick="fetchLive()">Refresh data</button>
-    <button class="btn" onclick="toggleMode()">Toggle mode</button>
-  </div>
-</div>
-
-<div class="page"><div class="gap">
-
-  <!-- BRIEFING -->
-  <div>
-    <div class="section-label">Executive briefing</div>
-    <div class="briefing">
-      <div class="briefing-icon">📋</div>
-      <div class="briefing-content">
-        <div class="briefing-title">Weekly summary</div>
-        <div class="briefing-text" id="briefing-text">Loading briefing...</div>
+  <div class="topbar-brand">
+    <div class="topbar-logo">ABS</div>
+    <div style="width:1px;height:24px;background:var(--border-strong);margin:0 8px;"></div>
+    <div>
+      <div class="topbar-title">Development Intelligence</div>
+      <div class="topbar-sub">
+        <span id="ts" style="color:var(--muted)">Connecting...</span>
+        <span id="item-count" style="background:var(--s3);padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600;color:var(--sub)"></span>
       </div>
     </div>
   </div>
+  <div class="topbar-right">
+    <div class="live-pill"><span class="live-dot"></span>Live</div>
+    <div style="display:flex;align-items:center;border:0.5px solid var(--border-strong);border-radius:8px;overflow:hidden;background:var(--s1);">
+      <div style="display:flex;align-items:center;gap:6px;padding:0 10px;height:30px;border-right:0.5px solid var(--border);">
+        <span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:0.05em">FROM</span>
+        <input type="date" id="date-from" onchange="fetchLive()" style="background:transparent;border:none;color:var(--text);font-size:12px;font-family:inherit;outline:none;cursor:pointer;width:108px"/>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:0 10px;height:30px;">
+        <span style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:0.05em">TO</span>
+        <input type="date" id="date-to" onchange="fetchLive()" style="background:transparent;border:none;color:var(--text);font-size:12px;font-family:inherit;outline:none;cursor:pointer;width:108px"/>
+      </div>
+    </div>
+    <button class="tbtn" onclick="resetDates()" title="Reset to ±15 days">Reset</button>
+    <button class="tbtn" onclick="fetchLive()">↺ Refresh</button>
+    <button class="tbtn" onclick="toggleMode()">◐ Mode</button>
+    <button class="tbtn primary" onclick="downloadExcel()">↓ Export</button>
+  </div>
+</div>
+
+<!-- PAGE -->
+<div class="page"><div class="gap">
 
   <!-- KPIs -->
   <div>
-    <div class="section-label">Executive summary</div>
+    <div class="section-header"><div class="section-label">Executive summary</div></div>
     <div class="kpi-grid">
-      <div class="kpi"><div class="label">Total items</div><div class="val" id="k-total">200</div><div class="hint">All developers</div></div>
-      <div class="kpi"><div class="label">Active</div><div class="val amber" id="k-active">135</div><div class="hint">In progress</div></div>
-      <div class="kpi"><div class="label">Closed</div><div class="val green" id="k-closed">54</div><div class="hint">Completed</div></div>
-      <div class="kpi"><div class="label">New / Backlog</div><div class="val blue" id="k-new">11</div><div class="hint">Not started</div></div>
-      <div class="kpi"><div class="label">Completion rate</div><div class="val green" id="k-rate">27%</div><div class="hint">Closed ÷ total</div></div>
-      <div class="kpi"><div class="label">Overdue items</div><div class="val red" id="k-overdue">0</div><div class="hint">Active &gt; 30 days</div></div>
+      <div class="kpi blue" style="animation-delay:0.0s"><div class="kpi-accent"></div><div class="kpi-label">Total items</div><div class="kpi-val blue" id="k-total">—</div><div class="kpi-hint">All developers</div></div>
+      <div class="kpi amber" style="animation-delay:0.1s"><div class="kpi-accent"></div><div class="kpi-label">Active</div><div class="kpi-val amber" id="k-active">—</div><div class="kpi-hint">In progress</div></div>
+      <div class="kpi green" style="animation-delay:0.2s"><div class="kpi-accent"></div><div class="kpi-label">Closed</div><div class="kpi-val green" id="k-closed">—</div><div class="kpi-hint">Completed</div></div>
+      <div class="kpi cyan" style="animation-delay:0.3s"><div class="kpi-accent"></div><div class="kpi-label">Created This Week</div><div class="kpi-val cyan" id="k-created">—</div><div class="kpi-hint">New items last 7 days</div></div>
+      <div class="kpi green" style="animation-delay:0.4s"><div class="kpi-accent"></div><div class="kpi-label">Completion rate</div><div class="kpi-val green" id="k-rate">—</div><div class="kpi-hint">Closed ÷ total</div></div>
+      <div class="kpi red" style="animation-delay:0.5s"><div class="kpi-accent"></div><div class="kpi-label">Overdue items</div><div class="kpi-val red" id="k-overdue">—</div><div class="kpi-hint">Active &gt; 30 days</div></div>
     </div>
   </div>
 
   <!-- CHARTS ROW 1 -->
   <div>
-    <div class="section-label">Team overview</div>
-    <div class="charts-grid">
-      <div class="card">
-        <div class="ctitle">State distribution</div>
-        <div class="csub">All work items</div>
-        <div class="chart-wrap" style="height:220px"><canvas id="c-donut" role="img" aria-label="State distribution donut chart">Active, closed, and new work items.</canvas></div>
+    <div class="section-header"><div class="section-label">Team overview</div></div>
+    <div class="grid-3">
+      <div class="card" style="animation-delay:0.1s">
+        <div class="ctitle">State distribution</div><div class="csub">All work items by current state</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="c-donut" role="img" aria-label="State distribution">State breakdown.</canvas></div>
         <div class="legend">
-          <div class="legend-item"><div class="legend-sq" style="background:#eda100"></div>Active — <span id="l-active">135</span></div>
-          <div class="legend-item"><div class="legend-sq" style="background:#1baf7a"></div>Closed — <span id="l-closed">54</span></div>
-          <div class="legend-item"><div class="legend-sq" style="background:#2a78d6"></div>New — <span id="l-new">11</span></div>
+          <div class="legend-item"><div class="legend-sq" style="background:var(--amber)"></div>Active — <span id="l-active">—</span></div>
+          <div class="legend-item"><div class="legend-sq" style="background:var(--green)"></div>Closed — <span id="l-closed">—</span></div>
+
         </div>
       </div>
-      <div class="card">
-        <div class="ctitle">Completion rate per developer</div>
-        <div class="csub">Closed ÷ total (%)</div>
-        <div class="chart-wrap" style="height:260px"><canvas id="c-comp" role="img" aria-label="Completion rate bar chart">Completion rates per developer.</canvas></div>
+      <div class="card" style="animation-delay:0.2s">
+        <div class="ctitle">Completion rate per developer</div><div class="csub">Green ≥70% · Amber ≥40% · Red &lt;40%</div>
+        <div class="chart-wrap" style="height:260px"><canvas id="c-comp" role="img" aria-label="Completion rates">Completion rates.</canvas></div>
       </div>
-      <div class="card">
-        <div class="ctitle">Workload breakdown</div>
-        <div class="csub">Active · Closed · New per developer</div>
-        <div class="chart-wrap" style="height:260px"><canvas id="c-stack" role="img" aria-label="Stacked workload chart">Work items stacked by state per developer.</canvas></div>
+      <div class="card" style="animation-delay:0.3s">
+        <div class="ctitle">Workload breakdown</div><div class="csub">Active · Closed · New stacked per developer</div>
+        <div class="chart-wrap" style="height:260px"><canvas id="c-stack" role="img" aria-label="Workload stacked">Workload stacked.</canvas></div>
         <div class="legend">
-          <div class="legend-item"><div class="legend-sq" style="background:#eda100"></div>Active</div>
-          <div class="legend-item"><div class="legend-sq" style="background:#1baf7a"></div>Closed</div>
-          <div class="legend-item"><div class="legend-sq" style="background:#2a78d6"></div>New</div>
+          <div class="legend-item"><div class="legend-sq" style="background:var(--amber)"></div>Active</div>
+          <div class="legend-item"><div class="legend-sq" style="background:var(--green)"></div>Closed</div>
+          <div class="legend-item"><div class="legend-sq" style="background:var(--violet)"></div>New</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- VELOCITY + TYPE -->
+  <!-- VELOCITY + TYPES -->
   <div>
-    <div class="section-label">Velocity & work type</div>
-    <div class="charts-grid-2">
-      <div class="card">
-        <div class="ctitle">Velocity trend</div>
-        <div class="csub">Items closed per week (last 8 weeks)</div>
-        <div class="chart-wrap" style="height:220px"><canvas id="c-velocity" role="img" aria-label="Weekly velocity line chart">Items closed per week over the last 8 weeks.</canvas></div>
+    <div class="section-header"><div class="section-label">Velocity & work types</div></div>
+    <div class="grid-2">
+      <div class="card" style="animation-delay:0.1s">
+        <div class="ctitle">Velocity trend</div><div class="csub">Items closed per week over the last 8 weeks</div>
+        <div class="velocity-metrics" id="vel-metrics"></div>
+        <div class="chart-wrap" style="height:180px"><canvas id="c-velocity" role="img" aria-label="Weekly velocity">Velocity trend.</canvas></div>
       </div>
-      <div class="card">
-        <div class="ctitle">Work item type breakdown</div>
-        <div class="csub">Distribution across all types</div>
-        <div class="chart-wrap" style="height:220px"><canvas id="c-types" role="img" aria-label="Work item type donut chart">Work item types breakdown.</canvas></div>
+      <div class="card" style="animation-delay:0.2s">
+        <div class="ctitle">Work item type breakdown</div><div class="csub">Distribution across all item types</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="c-types" role="img" aria-label="Type breakdown">Type breakdown.</canvas></div>
         <div class="legend" id="type-legend"></div>
       </div>
     </div>
@@ -275,29 +376,33 @@ tr:hover td{background:var(--s2);}
 
   <!-- TYPE CARDS -->
   <div>
-    <div class="section-label">Item type summary</div>
+    <div class="section-header"><div class="section-label">Item type summary</div></div>
     <div class="type-grid" id="type-grid"></div>
   </div>
 
   <!-- LEADERBOARD -->
   <div>
-    <div class="section-label">Developer leaderboard — items closed</div>
-    <div class="leaderboard" id="leaderboard"></div>
+    <div class="section-header"><div class="section-label">Developer leaderboard — items closed</div></div>
+    <div class="lb-grid" id="leaderboard"></div>
   </div>
 
   <!-- OVERDUE -->
   <div>
-    <div class="section-label">Overdue items — active for more than 30 days</div>
-    <div id="overdue-container"><div class="overdue-empty">No overdue items — all active work is within 30 days.</div></div>
+    <div class="section-header"><div class="section-label">Overdue items — active &gt; 30 days without update</div></div>
+    <div id="overdue-container"></div>
   </div>
 
-  <!-- DEVELOPER TABLE -->
+  <!-- TABLE -->
   <div>
-    <div class="section-label">Developer summary</div>
+    <div class="section-header"><div class="section-label">Full developer performance table</div></div>
     <div class="table-wrap">
+      <div class="table-header">
+        <div class="table-title">All developers</div>
+        <div style="font-size:11px;color:var(--muted)" id="table-meta"></div>
+      </div>
       <table>
         <thead><tr>
-          <th>Developer</th><th>Total</th><th>Active</th><th>Closed</th><th>New</th><th>Workload</th><th>Completion</th>
+          <th>Developer</th><th>Total</th><th>Active</th><th>Closed</th><th>New</th><th>Overdue</th><th>Workload</th><th>Completion</th>
         </tr></thead>
         <tbody id="dev-tbody"></tbody>
       </table>
@@ -306,48 +411,31 @@ tr:hover td{background:var(--s2);}
 
   <!-- DEV CARDS -->
   <div>
-    <div class="section-label">Individual breakdown</div>
+    <div class="section-header"><div class="section-label">Individual developer breakdown</div></div>
     <div class="dev-cards" id="dev-cards"></div>
   </div>
 
-  <div class="footer" id="footer">ABS-Central · Dr. Alaa Overview · Development Intelligence Dashboard</div>
+  <div class="footer" id="footer">ABS-Central · Dr. Alaa — Development Intelligence · Powered by Azure DevOps</div>
 
 </div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-const ORG="ADVBUSSOL", PROJECT="ABS-Central";
-const COLORS=["#2a78d6","#1baf7a","#eda100","#4a3aa7","#e34948","#199e70","#c98500","#3987e5","#e87ba4","#eb6834"];
-const TYPE_COLORS={"Epic":"#4a3aa7","Feature":"#2a78d6","User Story":"#1baf7a","Task":"#eda100","Issue":"#e34948","CR":"#eb6834","Unknown":"#898781"};
+const ORG="ADVBUSSOL",PROJECT="ABS-Central";
+const COLORS=["#4d9fff","#00d4a0","#ffb347","#9d7fff","#ff6b6b","#00c48a","#c98500","#79d7ff","#ff79c6","#ffaa5a"];
+const TYPE_COLORS={Epic:"#9d7fff",Feature:"#4d9fff","User Story":"#00d4a0",Task:"#ffb347",Issue:"#ff6b6b",CR:"#ff79c6"};
 
-const SEED_DEVS=[
-  {name:"Anas Al Tobasi",      active:40,closed:8, new:1, color:"#2a78d6"},
-  {name:"Hamzah Lababidi",     active:19,closed:11,new:2, color:"#1baf7a"},
-  {name:"Ahmad Moshtha",       active:16,closed:6, new:0, color:"#eda100"},
-  {name:"Mohammad Alkhalaileh",active:12,closed:8, new:2, color:"#4a3aa7"},
-  {name:"Moath Asfour",        active:18,closed:1, new:1, color:"#e34948"},
-  {name:"Tareq Alamoudi",      active:19,closed:0, new:0, color:"#199e70"},
-  {name:"Hashem Qaryouti",     active:7, closed:6, new:2, color:"#c98500"},
-  {name:"Omar Alzubi",         active:14,closed:0, new:0, color:"#3987e5"},
-  {name:"Karam Albataineh",    active:2, closed:2, new:0, color:"#e87ba4"},
-  {name:"Jamal Nofal",         active:2, closed:1, new:0, color:"#eb6834"},
-].map(d=>({...d,total:d.active+d.closed+d.new}));
-
-const SEED_TYPES={"User Story":80,"Task":70,"Epic":20,"Feature":18,"Issue":12};
-const SEED_VELOCITY=[3,5,4,8,6,9,7,11];
-const SEED_OVERDUE=[];
-
-let STATE={devs:[...SEED_DEVS],types:{...SEED_TYPES},velocity:[...SEED_VELOCITY],overdue:[...SEED_OVERDUE]};
-let charts={};
+let STATE={devs:[],types:{},velocity:[0,0,0,0,0,0,0,0],overdue:[],rawItems:[]};
+let CHARTS={};
 
 const getPAT=()=>sessionStorage.getItem("ado_pat")||"";
 const auth=p=>"Basic "+btoa(":"+p);
 const cr=d=>d.total?Math.round(d.closed/d.total*100):0;
-const crColor=v=>v>=70?"#1baf7a":v>=40?"#eda100":"#e34948";
+const crColor=v=>v>=70?"var(--green)":v>=40?"var(--amber)":"var(--red)";
+const crHex=v=>v>=70?"#00d4a0":v>=40?"#ffb347":"#ff6b6b";
 const crClass=v=>v>=70?"g":v>=40?"a":"r";
 const short=n=>n.split(" ")[0];
 const isDark=()=>document.documentElement.dataset.mode==="dark";
-const getC=()=>isDark()?{grid:"#2c2c2a",tick:"#898781",text:"#c3c2b7"}:{grid:"#e1e0d9",tick:"#898781",text:"#52514e"};
+const getC=()=>isDark()?{grid:"rgba(255,255,255,0.05)",tick:"#6b6b8a",text:"#9090b0"}:{grid:"rgba(0,0,0,0.06)",tick:"#8888a8",text:"#5a5a7a"};
 
 const openModal=()=>document.getElementById("overlay").classList.add("open");
 const closeModal=()=>document.getElementById("overlay").classList.remove("open");
@@ -356,28 +444,71 @@ const hideLoad=()=>document.getElementById("loading").classList.remove("show");
 
 function savePATAndLoad(){
   const p=document.getElementById("pat-input").value.trim();
-  if(!p)return;
-  sessionStorage.setItem("ado_pat",p);
+  if(!p){
+    const e=document.getElementById("pat-error");
+    e.textContent="Please enter your PAT.";
+    e.style.display="block";
+    return;
+  }
+  // Store temporarily without saving to session yet
+  window._tempPAT=p;
   closeModal();
+  fetchLive(p);
+}
+
+function resetDates(){
+  const now=new Date();
+  const dateStr=d=>d.toISOString().split('T')[0];
+  const defStart=new Date(now);defStart.setDate(now.getDate()-15);
+  const defEnd=new Date(now);defEnd.setDate(now.getDate()+15);
+  document.getElementById('date-from').value=dateStr(defStart);
+  document.getElementById('date-to').value=dateStr(defEnd);
   fetchLive();
 }
 
-async function fetchLive(){
-  const pat=getPAT();
+async function fetchLive(forcePAT){
+  const pat=forcePAT||window._tempPAT||getPAT();
   if(!pat){openModal();return;}
   showLoad("Running WIQL query...");
   try{
+    const now=new Date();
+    const dateStr=d=>d.toISOString().split('T')[0];
+    // Default: ±15 days from today
+    const defStart=new Date(now);defStart.setDate(now.getDate()-15);
+    const defEnd=new Date(now);defEnd.setDate(now.getDate()+15);
+    const fromVal=document.getElementById('date-from').value;
+    const toVal=document.getElementById('date-to').value;
+    const rangeStart=fromVal?new Date(fromVal):defStart;
+    const rangeEnd=toVal?new Date(toVal):defEnd;
+    // Set picker values if empty (first load)
+    if(!fromVal) document.getElementById('date-from').value=dateStr(defStart);
+    if(!toVal)   document.getElementById('date-to').value=dateStr(defEnd);
     const wr=await fetch(`https://dev.azure.com/${ORG}/${PROJECT}/_apis/wit/wiql?api-version=7.1`,
       {method:"POST",headers:{"Authorization":auth(pat),"Content-Type":"application/json"},
-       body:JSON.stringify({query:`SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject]='${PROJECT}' AND [System.WorkItemType] IN ('Epic','Feature','User Story','Task','Issue') ORDER BY [System.AssignedTo]`})});
-    if(!wr.ok)throw new Error("WIQL "+wr.status);
+       body:JSON.stringify({query:"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject]='ABS-Central' AND [System.WorkItemType] IN ('Epic','Feature','User Story','Task','Issue') AND [System.Title] NOT CONTAINS 'SAP Service Call' AND ( ([System.ChangedDate] >= '"+dateStr(rangeStart)+"' AND [System.ChangedDate] <= '"+dateStr(rangeEnd)+"') OR ([System.CreatedDate] >= '"+dateStr(rangeStart)+"' AND [System.CreatedDate] <= '"+dateStr(rangeEnd)+"') OR ([Microsoft.VSTS.Scheduling.StartDate] >= '"+dateStr(rangeStart)+"' AND [Microsoft.VSTS.Scheduling.StartDate] <= '"+dateStr(rangeEnd)+"') OR ([Microsoft.VSTS.Scheduling.TargetDate] >= '"+dateStr(rangeStart)+"' AND [Microsoft.VSTS.Scheduling.TargetDate] <= '"+dateStr(rangeEnd)+"') ) ORDER BY [System.AssignedTo]"})});
+    if(!wr.ok){
+      if(wr.status===401||wr.status===403||wr.status===400||wr.status===203||!wr.ok){
+        sessionStorage.removeItem("ado_pat");
+        window._tempPAT=null;
+        const errEl=document.getElementById("pat-error");
+        errEl.textContent="Invalid or incorrect token ("+wr.status+"). Please check your PAT and try again.";
+        errEl.style.display="block";
+        document.getElementById("pat-input").value="";
+        document.getElementById("pat-input").focus();
+        openModal();
+        hideLoad();
+        return;
+      }
+      throw new Error("WIQL "+wr.status);
+    }
     const wj=await wr.json();
     const ids=(wj.workItems||[]).map(w=>w.id);
-    if(!ids.length){hideLoad();return;}
-    showLoad(`Loading ${ids.length} items...`);
-    const fields=["System.Id","System.Title","System.State","System.AssignedTo","System.WorkItemType","System.ChangedDate","System.CreatedDate"];
+    if(!ids.length){hideLoad();renderAll();return;}
+    showLoad(`Loading ${ids.length} work items...`);
+    const fields=["System.Id","System.Title","System.State","System.AssignedTo","System.WorkItemType","System.ChangedDate","System.CreatedDate","System.IterationPath","Microsoft.VSTS.Scheduling.StoryPoints","Microsoft.VSTS.Scheduling.StartDate","Microsoft.VSTS.Scheduling.TargetDate"];
     let all=[];
     for(let i=0;i<ids.length;i+=200){
+      showLoad(`Loading items ${i+1}–${Math.min(i+200,ids.length)} of ${ids.length}...`);
       const br=await fetch(`https://dev.azure.com/${ORG}/${PROJECT}/_apis/wit/workitemsbatch?api-version=7.1`,
         {method:"POST",headers:{"Authorization":auth(pat),"Content-Type":"application/json"},
          body:JSON.stringify({ids:ids.slice(i,i+200),fields})});
@@ -385,85 +516,79 @@ async function fetchLive(){
       const bj=await br.json();
       all=all.concat(bj.value||[]);
     }
-
-    const now=new Date();
-    const devMap={};
-    const typeMap={};
-    const overdue=[];
-    const weeklyMap={};
-
-    // Build 8 week labels
-    for(let w=7;w>=0;w--){
-      const d=new Date(now);
-      d.setDate(d.getDate()-w*7);
-      const key=`${d.getFullYear()}-W${String(Math.ceil(d.getDate()/7)).padStart(2,"0")}`;
-      weeklyMap[key]=0;
-    }
-
-    all.forEach(wi=>{
-      const f=wi.fields;
-      const a=f["System.AssignedTo"];
-      if(!a)return;
-      const name=a.displayName.replace(" ABS","").trim();
-      const state=f["System.State"]||"";
-      const type=f["System.WorkItemType"]||"Unknown";
-      const changed=f["System.ChangedDate"]?new Date(f["System.ChangedDate"]):null;
-      const title=f["System.Title"]||"";
-
-      if(!devMap[name])devMap[name]={name,active:0,closed:0,new:0,total:0};
-      devMap[name].total++;
-      if(state==="Active")devMap[name].active++;
-      else if(state==="Closed"){
-        devMap[name].closed++;
-        // Weekly velocity
-        if(changed){
-          const daysAgo=Math.floor((now-changed)/(1000*60*60*24));
-          if(daysAgo<=56){
-            const weekIdx=7-Math.floor(daysAgo/7);
-            if(weekIdx>=0&&weekIdx<8) STATE.velocity[weekIdx]=(STATE.velocity[weekIdx]||0)+1;
-          }
-        }
-      }
-      else if(state==="New")devMap[name].new++;
-
-      typeMap[type]=(typeMap[type]||0)+1;
-
-      // Overdue: active and not changed in 30+ days
-      if(state==="Active"&&changed){
-        const days=Math.floor((now-changed)/(1000*60*60*24));
-        if(days>=30) overdue.push({id:wi.id,title,name,days});
-      }
-    });
-
-    STATE.velocity=new Array(8).fill(0);
-    all.forEach(wi=>{
-      const f=wi.fields;
-      if(f["System.State"]!=="Closed")return;
-      const changed=f["System.ChangedDate"]?new Date(f["System.ChangedDate"]):null;
-      if(!changed)return;
-      const daysAgo=Math.floor((now-changed)/(1000*60*60*24));
-      if(daysAgo<=56){
-        const weekIdx=7-Math.floor(daysAgo/7);
-        if(weekIdx>=0&&weekIdx<8) STATE.velocity[weekIdx]++;
-      }
-    });
-
-    STATE.devs=Object.values(devMap).sort((a,b)=>b.total-a.total);
-    STATE.devs.forEach((d,i)=>d.color=COLORS[i%COLORS.length]);
-    STATE.types=typeMap;
-    STATE.overdue=overdue.sort((a,b)=>b.days-a.days);
-
+    showLoad("Processing data...");
+    // PAT is valid - now save it
+    sessionStorage.setItem("ado_pat",pat);
+    window._tempPAT=null;
+    STATE.rawItems=all;
+    processData(all);
     renderAll();
     hideLoad();
-    const now2=new Date();
-    document.getElementById("ts").textContent=`Live · ${now2.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})} · ${now2.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})} · ${all.length} items`;
-    document.getElementById("footer").textContent=`ABS-Central · Dr. Alaa Overview · Last updated ${now2.toLocaleString()}`;
+    document.getElementById("ts").textContent=`Live · ${now.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})} · ${now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})}`;
+    const filteredCount=STATE.devs.reduce((s,d)=>s+d.total,0);
+    document.getElementById("item-count").textContent=filteredCount?filteredCount+" items":"";
+    document.getElementById("footer").textContent=`ABS-Central · Dr. Alaa Intelligence · Last updated ${now.toLocaleString()} · ${all.length} items`;
   }catch(e){
     hideLoad();
-    alert("Could not fetch live data: "+e.message+"\n\nShowing cached data.");
-    STATE={devs:[...SEED_DEVS],types:{...SEED_TYPES},velocity:[...SEED_VELOCITY],overdue:[...SEED_OVERDUE]};
-    renderAll();
+    sessionStorage.removeItem("ado_pat");
+    window._tempPAT=null;
+    const errEl=document.getElementById("pat-error");
+    if(errEl){
+      errEl.textContent="Connection failed: "+e.message+". Please check your PAT and try again.";
+      errEl.style.display="block";
+    }
+    document.getElementById("pat-input").value="";
+    openModal();
   }
+}
+
+function processData(all){
+  const now=new Date();
+  const devMap={};
+  const typeMap={};
+  const overdue=[];
+  const vel=new Array(8).fill(0);
+
+  all.forEach(wi=>{
+    const f=wi.fields;
+    const a=f["System.AssignedTo"];
+    if(!a)return;
+    const title=(f["System.Title"]||"");
+    if(title.toLowerCase().includes("sap service call"))return;
+    const name=a.displayName.replace(" ABS","").trim();
+    const state=f["System.State"]||"";
+    const type=f["System.WorkItemType"]||"Unknown";
+    const changed=f["System.ChangedDate"]?new Date(f["System.ChangedDate"]):null;
+    const created=f["System.CreatedDate"]?new Date(f["System.CreatedDate"]):null;
+    const titleShort=title.substring(0,80);
+    const sp=f["Microsoft.VSTS.Scheduling.StoryPoints"]||0;
+    const iter=f["System.IterationPath"]||"";
+
+    if(!devMap[name])devMap[name]={name,active:0,closed:0,new:0,total:0,overdue:0,sp:0,color:"#4d9fff"};
+    devMap[name].total++;
+    devMap[name].sp+=sp;
+    if(state==="Active"){
+      devMap[name].active++;
+      if(changed){
+        const days=Math.floor((now-changed)/(1000*60*60*24));
+        if(days>=30){devMap[name].overdue++;overdue.push({id:wi.id,title,name,days,type});}
+      }
+    } else if(state==="Closed"){
+      devMap[name].closed++;
+      if(changed){
+        const daysAgo=Math.floor((now-changed)/(1000*60*60*24));
+        if(daysAgo<=56){const wi2=7-Math.floor(daysAgo/7);if(wi2>=0&&wi2<8)vel[wi2]++;}
+      }
+    } else if(state==="New") devMap[name].new++;
+
+    typeMap[type]=(typeMap[type]||0)+1;
+  });
+
+  STATE.devs=Object.values(devMap).sort((a,b)=>b.total-a.total);
+  STATE.devs.forEach((d,i)=>d.color=COLORS[i%COLORS.length]);
+  STATE.types=typeMap;
+  STATE.velocity=vel;
+  STATE.overdue=overdue.sort((a,b)=>b.days-a.days);
 }
 
 function renderAll(){
@@ -474,31 +599,38 @@ function renderAll(){
   const tN=sorted.reduce((s,d)=>s+d.new,0);
   const tAll=sorted.reduce((s,d)=>s+d.total,0);
   const rate=tAll?Math.round(tC/tAll*100):0;
-  const overdueCnt=STATE.overdue.length;
+  const ov=STATE.overdue.length;
+  const velTotal=STATE.velocity.reduce((s,v)=>s+v,0);
+  const velLast=STATE.velocity[7]||0;
+  const velPrev=STATE.velocity[6]||0;
+  const velTrend=velLast>=velPrev?"↑":"↓";
 
-  // KPIs
   document.getElementById("k-total").textContent=tAll;
   document.getElementById("k-active").textContent=tA;
   document.getElementById("k-closed").textContent=tC;
-  document.getElementById("k-new").textContent=tN;
+  const nowRef=new Date();
+  const weekAgo=new Date(nowRef);weekAgo.setDate(nowRef.getDate()-7);
+  const createdThisWeek=STATE.rawItems.filter(wi=>{
+    const a=wi.fields["System.AssignedTo"];
+    if(!a)return false;
+    const title=(wi.fields["System.Title"]||"").toLowerCase();
+    if(title.includes("sap service call"))return false;
+    const created=wi.fields["System.CreatedDate"]?new Date(wi.fields["System.CreatedDate"]):null;
+    return created&&created>=weekAgo;
+  }).length;
+  document.getElementById("k-created").textContent=createdThisWeek;
   document.getElementById("k-rate").textContent=rate+"%";
-  document.getElementById("k-overdue").textContent=overdueCnt;
+  document.getElementById("k-overdue").textContent=ov;
   document.getElementById("l-active").textContent=tA;
   document.getElementById("l-closed").textContent=tC;
-  document.getElementById("l-new").textContent=tN;
 
-  // Briefing
-  const topDev=sorted[0];
-  const topCloser=[...sorted].sort((a,b)=>b.closed-a.closed)[0];
-  const weekTotal=STATE.velocity.reduce((s,v)=>s+v,0);
-  const lastWeek=STATE.velocity[7]||0;
-  document.getElementById("briefing-text").innerHTML=
-    `The team currently has <strong>${tAll} work items</strong> across ${sorted.length} developers. `+
-    `<strong>${tC} items have been closed</strong> with an overall completion rate of <strong>${rate}%</strong>. `+
-    (overdueCnt>0?`<strong style="color:var(--red)">${overdueCnt} item${overdueCnt>1?"s are":" is"} overdue</strong> (active for more than 30 days without an update). `:"All active items are within the 30-day threshold. ")+
-    `<strong>${topDev?short(topDev.name):""}</strong> carries the highest workload with <strong>${topDev?topDev.total:0} items</strong>, `+
-    `while <strong>${topCloser?short(topCloser.name):""}</strong> leads in deliveries with <strong>${topCloser?topCloser.closed:0} closed items</strong>. `+
-    `Over the last 8 weeks, the team closed <strong>${weekTotal} items</strong>, with <strong>${lastWeek} closed in the most recent week</strong>.`;
+  document.getElementById("table-meta").textContent=`${sorted.length} developers · ${tAll} items`;
+
+  document.getElementById("vel-metrics").innerHTML=`
+    <div class="vel-box"><div class="vel-val">${velTotal}</div><div class="vel-label">Closed (8 weeks)</div></div>
+    <div class="vel-box"><div class="vel-val">${velLast} ${velTrend}</div><div class="vel-label">This week</div></div>
+    <div class="vel-box"><div class="vel-val">${Math.round(velTotal/8)}</div><div class="vel-label">Weekly avg</div></div>
+    <div class="vel-box"><div class="vel-val">${Math.max(...STATE.velocity)}</div><div class="vel-label">Best week</div></div>`;
 
   buildCharts(sorted,tA,tC,tN);
   buildTypeGrid();
@@ -509,152 +641,171 @@ function renderAll(){
 }
 
 function buildCharts(sorted,tA,tC,tN){
-  Object.values(charts).forEach(c=>c.destroy());
-  charts={};
+  Object.values(CHARTS).forEach(c=>c.destroy());CHARTS={};
   const C=getC();
   const names=sorted.map(d=>short(d.name));
+  const bdark=isDark()?"#12121a":"#f4f4f8";
 
-  charts.donut=new Chart(document.getElementById("c-donut"),{
+  CHARTS.donut=new Chart(document.getElementById("c-donut"),{
     type:"doughnut",
-    data:{labels:["Active","Closed","New"],datasets:[{data:[tA,tC,tN],backgroundColor:["#eda100","#1baf7a","#2a78d6"],borderWidth:4,borderColor:isDark()?"#1a1a19":"#ffffff"}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:"70%",plugins:{legend:{display:false}}}
+    data:{labels:["Active","Closed","New"],datasets:[{data:[tA,tC,tN],backgroundColor:["#ffb347","#00d4a0","#9d7fff"],borderWidth:4,borderColor:bdark}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"72%",plugins:{legend:{display:false}}}
   });
 
   const rates=sorted.map(d=>cr(d));
-  charts.comp=new Chart(document.getElementById("c-comp"),{
+  CHARTS.comp=new Chart(document.getElementById("c-comp"),{
     type:"bar",
-    data:{labels:names,datasets:[{data:rates,backgroundColor:rates.map(v=>crColor(v)),borderRadius:4,barThickness:14}]},
+    data:{labels:names,datasets:[{data:rates,backgroundColor:rates.map(v=>crHex(v)),borderRadius:5,barThickness:13}]},
     options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{x:{min:0,max:100,grid:{color:C.grid},ticks:{color:C.tick,callback:v=>v+"%"},border:{display:false}},
-              y:{grid:{display:false},ticks:{color:C.text,font:{size:12}},border:{display:false}}}}
+              y:{grid:{display:false},ticks:{color:C.text,font:{size:11}},border:{display:false}}}}
   });
 
-  charts.stack=new Chart(document.getElementById("c-stack"),{
+  CHARTS.stack=new Chart(document.getElementById("c-stack"),{
     type:"bar",
     data:{labels:names,datasets:[
-      {label:"Active",data:sorted.map(d=>d.active),backgroundColor:"#eda100",borderRadius:3,barThickness:16},
-      {label:"Closed",data:sorted.map(d=>d.closed),backgroundColor:"#1baf7a",borderRadius:3,barThickness:16},
-      {label:"New",   data:sorted.map(d=>d.new),   backgroundColor:"#2a78d6",borderRadius:3,barThickness:16},
+      {label:"Active",data:sorted.map(d=>d.active),backgroundColor:"#ffb347",borderRadius:3,barThickness:15},
+      {label:"Closed",data:sorted.map(d=>d.closed),backgroundColor:"#00d4a0",borderRadius:3,barThickness:15},
+      {label:"New",   data:sorted.map(d=>d.new),   backgroundColor:"#9d7fff",borderRadius:3,barThickness:15},
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{x:{stacked:true,grid:{display:false},ticks:{color:C.text,font:{size:12},maxRotation:30,autoSkip:false},border:{display:false}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{color:C.text,font:{size:11},maxRotation:30,autoSkip:false},border:{display:false}},
               y:{stacked:true,beginAtZero:true,grid:{color:C.grid},ticks:{color:C.tick},border:{display:false}}}}
   });
 
-  // Velocity
-  const wLabels=[];
-  const now=new Date();
-  for(let w=7;w>=0;w--){
-    const d=new Date(now);
-    d.setDate(d.getDate()-w*7);
-    wLabels.push(d.toLocaleDateString("en-US",{month:"short",day:"numeric"}));
-  }
-  charts.velocity=new Chart(document.getElementById("c-velocity"),{
+  const wLabels=[];const nowChart=new Date();
+  for(let w=7;w>=0;w--){const d=new Date(nowChart);d.setDate(nowChart.getDate()-w*7);wLabels.push(d.toLocaleDateString("en-US",{month:"short",day:"numeric"}));}
+  CHARTS.vel=new Chart(document.getElementById("c-velocity"),{
     type:"line",
-    data:{labels:wLabels,datasets:[{label:"Closed",data:STATE.velocity,borderColor:"#1baf7a",backgroundColor:"rgba(27,175,122,0.08)",fill:true,tension:0.4,pointRadius:5,pointBackgroundColor:"#1baf7a",pointBorderColor:isDark()?"#1a1a19":"#ffffff",pointBorderWidth:2,borderWidth:2}]},
+    data:{labels:wLabels,datasets:[{label:"Closed",data:STATE.velocity,borderColor:"#00d4a0",backgroundColor:"rgba(0,212,160,0.08)",fill:true,tension:0.45,pointRadius:5,pointBackgroundColor:"#00d4a0",pointBorderColor:bdark,pointBorderWidth:2,borderWidth:2.5}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{x:{grid:{display:false},ticks:{color:C.text,font:{size:11}},border:{display:false}},
               y:{beginAtZero:true,grid:{color:C.grid},ticks:{color:C.tick,stepSize:1},border:{display:false}}}}
   });
 
-  // Types donut
-  const typeEntries=Object.entries(STATE.types).sort((a,b)=>b[1]-a[1]);
-  const typeLabels=typeEntries.map(e=>e[0]);
-  const typeData=typeEntries.map(e=>e[1]);
-  const typeColors=typeLabels.map(l=>TYPE_COLORS[l]||"#898781");
-
-  charts.types=new Chart(document.getElementById("c-types"),{
+  const te=Object.entries(STATE.types).sort((a,b)=>b[1]-a[1]);
+  const tLabels=te.map(e=>e[0]);const tData=te.map(e=>e[1]);
+  const tColors=tLabels.map(l=>TYPE_COLORS[l]||"#6b6b8a");
+  CHARTS.types=new Chart(document.getElementById("c-types"),{
     type:"doughnut",
-    data:{labels:typeLabels,datasets:[{data:typeData,backgroundColor:typeColors,borderWidth:3,borderColor:isDark()?"#1a1a19":"#ffffff"}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:"60%",plugins:{legend:{display:false}}}
+    data:{labels:tLabels,datasets:[{data:tData,backgroundColor:tColors,borderWidth:4,borderColor:bdark}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{display:false}}}
   });
-
-  // Type legend
-  const tTotal=typeData.reduce((s,v)=>s+v,0);
-  document.getElementById("type-legend").innerHTML=typeEntries.map(([l,v])=>
-    `<div class="legend-item"><div class="legend-sq" style="background:${TYPE_COLORS[l]||"#898781"}"></div>${l} — ${v}</div>`
-  ).join("");
+  const tt=tData.reduce((s,v)=>s+v,0)||1;
+  document.getElementById("type-legend").innerHTML=te.map(([l,v])=>`
+    <div class="legend-item"><div class="legend-sq" style="background:${TYPE_COLORS[l]||"#6b6b8a"}"></div>${l} — ${v} (${Math.round(v/tt*100)}%)</div>`).join("");
 }
 
 function buildTypeGrid(){
   const entries=Object.entries(STATE.types).sort((a,b)=>b[1]-a[1]);
   const total=entries.reduce((s,e)=>s+e[1],0)||1;
-  document.getElementById("type-grid").innerHTML=entries.map(([l,v])=>`
-    <div class="type-card">
-      <div class="type-val" style="color:${TYPE_COLORS[l]||"#898781"}">${v}</div>
+  document.getElementById("type-grid").innerHTML=entries.map(([l,v])=>{
+    const pct=Math.round(v/total*100);
+    const col=TYPE_COLORS[l]||"#6b6b8a";
+    return`<div class="type-card">
+      <div class="type-card-accent" style="background:${col}"></div>
+      <div class="type-val" style="color:${col}">${v}</div>
       <div class="type-label">${l}s</div>
-      <div class="type-bar" style="background:${TYPE_COLORS[l]||"#898781"};width:${Math.round(v/total*100)}%"></div>
-    </div>`).join("");
+      <div class="type-pct-row">
+        <span class="type-pct" style="color:${col}">${pct}%</span>
+        <span style="font-size:10px;color:var(--muted)">of total</span>
+      </div>
+      <div class="type-prog"><div class="type-prog-fill" style="width:${pct}%;background:${col}"></div></div>
+    </div>`;}).join("");
 }
 
 function buildLeaderboard(sorted){
-  const byClose=[...sorted].sort((a,b)=>b.closed-a.closed).slice(0,6);
-  const ranks=["1st","2nd","3rd","4th","5th","6th"];
-  const rColors=["gold","silver","bronze","","",""];
-  document.getElementById("leaderboard").innerHTML=byClose.map((d,i)=>`
-    <div class="lb-card">
-      <div class="lb-rank ${rColors[i]}">${ranks[i]}</div>
+  const byClose=[...sorted].sort((a,b)=>b.closed-a.closed);
+  const rc=byClose.map((_,i)=>i<3?`r${i+1}`:"r4");
+  const ranks=byClose.map((_,i)=>String(i+1));
+  const labels=byClose.map((_,i)=>i===0?"1st":i===1?"2nd":i===2?"3rd":`${i+1}th`);
+  document.getElementById("leaderboard").innerHTML=byClose.map((d,i)=>{
+    const ovHtml=d.overdue>0?`<span class="lb-detail-tag" style="color:var(--red)">● ${d.overdue} overdue</span>`:`<span class="lb-detail-tag" style="color:var(--green)">● On track</span>`;
+    return`<div class="lb-item ${i===0?"top":""}">
+      <div class="lb-rank-wrap">
+        <div class="lb-rank ${rc[i]}">${ranks[i]}</div>
+        <div class="lb-rank-label">${labels[i]}</div>
+      </div>
       <div class="lb-av" style="background:${d.color}">${d.name[0]}</div>
       <div class="lb-info">
         <div class="lb-name">${d.name}</div>
-        <div class="lb-detail">${d.total} total · ${d.active} active</div>
+        <div class="lb-detail">
+          <span class="lb-detail-tag">${d.total} total</span>
+          <span class="lb-detail-tag">${d.active} active</span>
+          ${ovHtml}
+        </div>
       </div>
-      <div class="lb-closed">${d.closed}</div>
-    </div>`).join("");
+      <div class="lb-val-wrap">
+        <div class="lb-val">${d.closed}</div>
+        <div class="lb-val-label">closed</div>
+      </div>
+    </div>`;}).join("");
 }
 
 function buildOverdue(){
-  const container=document.getElementById("overdue-container");
+  const c=document.getElementById("overdue-container");
   if(!STATE.overdue.length){
-    container.innerHTML=`<div class="overdue-empty">No overdue items — all active work is within the 30-day threshold.</div>`;
+    c.innerHTML=`<div class="overdue-empty">
+      <div class="overdue-empty-icon">✓</div>
+      <div class="overdue-empty-title">All clear</div>
+      No overdue items — all active work is within the 30-day threshold.
+    </div>`;
     return;
   }
-  container.innerHTML=`<div class="overdue-list">${STATE.overdue.slice(0,10).map(o=>`
-    <div class="overdue-item">
-      <div class="overdue-days">${o.days}d stale</div>
-      <div class="overdue-info">
+  const typeTagColor=(t)=>{const m={Epic:"var(--violet)",Feature:"var(--blue)","User Story":"var(--green)",Task:"var(--amber)",Issue:"var(--red)"};return m[t]||"var(--muted)";};
+  c.innerHTML=`<div class="overdue-list">${STATE.overdue.slice(0,15).map((o,i)=>`
+    <div class="overdue-item" style="animation-delay:${i*0.05}s">
+      <div class="overdue-badge">
+        <div class="overdue-days-num">${o.days}</div>
+        <div class="overdue-days-label">days</div>
+      </div>
+      <div style="flex:1;overflow:hidden">
         <div class="overdue-title">${o.title}</div>
-        <div class="overdue-dev">${o.name}</div>
+        <div class="overdue-meta">
+          <span class="overdue-dev">${o.name}</span>
+          <span style="color:var(--border-strong)">·</span>
+          <span class="overdue-type-tag" style="background:rgba(0,0,0,0.04);color:${typeTagColor(o.type)}">${o.type}</span>
+        </div>
       </div>
     </div>`).join("")}</div>`;
 }
 
 function buildTable(sorted,maxT){
   document.getElementById("dev-tbody").innerHTML=sorted.map(d=>{
-    const rate=cr(d);
-    const bw=Math.round(d.total/maxT*100);
+    const rate=cr(d);const bw=Math.round(d.total/maxT*100);
     return`<tr>
       <td><div class="dev-cell"><div class="av" style="background:${d.color}">${d.name[0]}</div>${d.name}</div></td>
       <td><strong>${d.total}</strong></td>
       <td class="c-amber">${d.active}</td>
       <td class="c-green">${d.closed}</td>
       <td class="c-blue">${d.new}</td>
+      <td class="${d.overdue>0?"c-red":""}">${d.overdue||0}</td>
       <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${bw}%;background:${d.color}"></div></div><span style="font-size:11px;color:var(--muted)">${d.total}</span></div></td>
       <td><span class="pill ${crClass(rate)}">${rate}%</span></td>
     </tr>`;}).join("");
 }
 
 function buildCards(sorted){
-  document.getElementById("dev-cards").innerHTML=sorted.map(d=>{
-    const rate=cr(d);
-    const cc=crColor(rate);
-    return`<div class="dev-card">
+  document.getElementById("dev-cards").innerHTML=sorted.map((d,i)=>{
+    const rate=cr(d);const cc=crHex(rate);
+    return`<div class="dev-card" style="animation-delay:${i*0.06}s">
       <div class="dev-card-head">
-        <div class="av" style="background:${d.color};width:36px;height:36px;font-size:13px;flex-shrink:0">${d.name[0]}</div>
-        <div><div class="dev-card-name">${short(d.name)}</div><div class="dev-card-total">${d.total} items</div></div>
+        <div class="dev-card-av" style="background:${d.color}">${d.name[0]}</div>
+        <div><div class="dev-card-name">${short(d.name)}</div><div class="dev-card-total">${d.total} items${d.overdue>0?` · <span style="color:var(--red)">${d.overdue} overdue</span>`:""}</div></div>
       </div>
-      <div class="mini-grid">
+      <div class="mini-row">
         <div class="mini"><div class="mini-n am">${d.active}</div><div class="mini-l">Active</div></div>
         <div class="mini"><div class="mini-n gn">${d.closed}</div><div class="mini-l">Closed</div></div>
         <div class="mini"><div class="mini-n bl">${d.new}</div><div class="mini-l">New</div></div>
       </div>
       <div class="prog"><div class="prog-fill" style="width:${rate}%;background:${cc}"></div></div>
-      <div class="prog-label"><span>Completion</span><span style="color:${cc};font-weight:500">${rate}%</span></div>
+      <div class="prog-label"><span>Completion</span><span style="color:${cc};font-weight:600">${rate}%</span></div>
     </div>`;}).join("");
 }
 
 function toggleMode(){
-  document.documentElement.dataset.mode=isDark()?"":"dark";
+  const r=document.documentElement;
+  r.dataset.mode=isDark()?"":'dark';
   const sorted=[...STATE.devs].sort((a,b)=>b.total-a.total);
   const tA=sorted.reduce((s,d)=>s+d.active,0);
   const tC=sorted.reduce((s,d)=>s+d.closed,0);
@@ -662,14 +813,305 @@ function toggleMode(){
   buildCharts(sorted,tA,tC,tN);
 }
 
-if(window.matchMedia("(prefers-color-scheme:dark)").matches){
-  document.documentElement.dataset.mode="dark";
+function downloadExcel(){
+  if(!STATE.rawItems.length){alert("Please load live data first before exporting.");return;}
+  showLoad("Building Excel report...");
+  setTimeout(async function(){
+  try{
+    const sorted   = [...STATE.devs].sort((a,b)=>b.total-a.total);
+    const now2     = new Date();
+    const fromVal  = document.getElementById('date-from').value||"";
+    const toVal    = document.getElementById('date-to').value||"";
+    const dateRange= fromVal&&toVal ? fromVal+" to "+toVal : "15 days from today";
+    const tTotal   = sorted.reduce((s,d)=>s+d.total,0);
+    const tActive  = sorted.reduce((s,d)=>s+d.active,0);
+    const tClosed  = sorted.reduce((s,d)=>s+d.closed,0);
+    const tNew     = sorted.reduce((s,d)=>s+d.new,0);
+    const tRate    = tTotal?Math.round(tClosed/tTotal*100)+"%":"0%";
+    const typeTotal= Object.values(STATE.types).reduce((s,v)=>s+v,0)||1;
+
+    const wb = new ExcelJS.Workbook();
+    wb.creator = "ABS Intelligence";
+    wb.created = now2;
+
+    // ── COLOR HELPERS ──────────────────────────────────────────────
+    const F = (hex) => ({type:"pattern",pattern:"solid",fgColor:{argb:hex}});
+    const FILLS = {
+      title:  F("FF0F2D4A"), header: F("FF1A3C5E"), section:F("FFE3EDF7"),
+      meta:   F("FFF8F9FA"), active: F("FFFFF8E1"), closed: F("FFE8F5E9"),
+      newF:   F("FFEDE7F6"), overdue:F("FFFFCDD2"), issue:  F("FFFFEBEE"),
+      epic:   F("FFF3E5F5"), feat:   F("FFE3F2FD"), story:  F("FFE8F5E9"),
+      task:   F("FFFFFDE7"), compG:  F("FFCCFF90"), compA:  F("FFFFE0B2"),
+      compR:  F("FFFFCDD2"), even:   F("FFF0F6FF"), white:  F("FFFFFFFF"),
+      blank:  F("FFF8F9FA"),
+    };
+    const fn = (bold,color,size) => ({bold,color:{argb:color},size:size||10,name:"Calibri"});
+    const FONTS = {
+      title:  fn(true, "FFFFFFFF",14), header: fn(true, "FFFFFFFF",11),
+      section:fn(true, "FF0F2D4A",10), metaK:  fn(true, "FF374151",10),
+      metaV:  fn(false,"FF6B7280", 9), normal: fn(false,"FF374151",10),
+      bold:   fn(true, "FF374151",10), active: fn(true, "FFF57F17",10),
+      closed: fn(true, "FF2E7D32",10), newF:   fn(true, "FF4527A0",10),
+      overdue:fn(true, "FFB71C1C",10), issue:  fn(true, "FFB71C1C",10),
+      epic:   fn(true, "FF6A1B9A",10), feat:   fn(true, "FF0D47A1",10),
+      story:  fn(true, "FF1B5E20",10), task:   fn(true, "FFE65100",10),
+      compG:  fn(true, "FF1B5E20",10), compA:  fn(true, "FFE65100",10),
+      compR:  fn(true, "FFB71C1C",10), gray:   fn(false,"FF9CA3AF", 9),
+    };
+    const bdr = {top:{style:"thin",color:{argb:"FFD0D5DD"}},bottom:{style:"thin",color:{argb:"FFD0D5DD"}},left:{style:"thin",color:{argb:"FFD0D5DD"}},right:{style:"thin",color:{argb:"FFD0D5DD"}}};
+
+    function stFill(s){ return s==="Active"?FILLS.active:s==="Closed"?FILLS.closed:s==="New"?FILLS.newF:FILLS.white; }
+    function stFont(s){ return s==="Active"?FONTS.active:s==="Closed"?FONTS.closed:s==="New"?FONTS.newF:FONTS.normal; }
+    function tyFill(t){ return t==="Issue"?FILLS.issue:t==="Epic"?FILLS.epic:t==="Feature"?FILLS.feat:t==="User Story"?FILLS.story:t==="Task"?FILLS.task:FILLS.white; }
+    function tyFont(t){ return t==="Issue"?FONTS.issue:t==="Epic"?FONTS.epic:t==="Feature"?FONTS.feat:t==="User Story"?FONTS.story:t==="Task"?FONTS.task:FONTS.normal; }
+    function coFill(v){ const n=parseInt(v); return n>=70?FILLS.compG:n>=40?FILLS.compA:FILLS.compR; }
+    function coFont(v){ const n=parseInt(v); return n>=70?FONTS.compG:n>=40?FONTS.compA:FONTS.compR; }
+    function rowFill(i){ return i%2===0?FILLS.even:FILLS.white; }
+
+    function styleCell(cell, fillObj, fontObj, hAlign, wrapText){
+      cell.fill      = fillObj||FILLS.white;
+      cell.font      = fontObj||FONTS.normal;
+      cell.alignment = {horizontal:hAlign||"left", vertical:"middle", wrapText:!!wrapText};
+      cell.border    = bdr;
+    }
+
+    function titleRow(ws, value, cols, rowHeight){
+      const row = ws.addRow([value]);
+      row.height = rowHeight||28;
+      const c = row.getCell(1);
+      styleCell(c, FILLS.title, FONTS.title, "center");
+      ws.mergeCells(row.number, 1, row.number, cols);
+      return row;
+    }
+
+    function sectionRow(ws, value, cols){
+      const row = ws.addRow([value]);
+      row.height = 22;
+      const c = row.getCell(1);
+      styleCell(c, FILLS.section, FONTS.section, "left");
+      ws.mergeCells(row.number, 1, row.number, cols);
+    }
+
+    function headerRow(ws, headers){
+      const row = ws.addRow(headers);
+      row.height = 22;
+      headers.forEach((_,i)=>{
+        const c = row.getCell(i+1);
+        styleCell(c, FILLS.header, FONTS.header, "center");
+      });
+      return row;
+    }
+
+function metaRow(ws, label, value, cols){
+  const row = ws.addRow([label, value]);
+  row.height = 24;  // ← Increased from 16 to 24
+  styleCell(row.getCell(1), FILLS.meta, FONTS.metaK, "left", false);
+  styleCell(row.getCell(2), FILLS.meta, FONTS.metaV, "left", true);  // ← Added true for wrapText
+  ws.mergeCells(row.number, 2, row.number, cols);
 }
 
-renderAll();
+function blankRow(ws, cols){
+  const row = ws.addRow([""]);
+  row.height = 14;  // ← Increased from 6 to 14
+  const c = row.getCell(1);
+  styleCell(c, FILLS.blank, FONTS.normal);
+  ws.mergeCells(row.number, 1, row.number, cols);
+  // Fill all cells in the row with the blank color
+  for(let i = 1; i <= cols; i++){
+    const cell = row.getCell(i);
+    cell.fill = FILLS.blank;
+    cell.border = bdr;
+  }
+}
+
+    // ══════════════════════════════════════════════════════════════
+    // SHEET 1 — TEAM SUMMARY
+    // ══════════════════════════════════════════════════════════════
+const ws1 = wb.addWorksheet("Team Summary", {views:[{showGridLines:false}]});
+ws1.columns = [
+  {width:8},{width:40},{width:14},{width:14},{width:50},{width:8},{width:8},{width:8}
+];
+
+    titleRow(ws1, "ABS-Central — Development Intelligence Report", 8, 30);
+    metaRow(ws1, "Report Generated", now2.toLocaleString(), 8);
+    metaRow(ws1, "Date Range", dateRange, 8);
+    metaRow(ws1, "Project", "ABS-Central / ADVBUSSOL", 8);
+    blankRow(ws1, 8);
+    sectionRow(ws1, "  TEAM PERFORMANCE KPIs", 8);
+
+    // KPI header
+    const kpiHdr = ws1.addRow(["Metric","","Value","","Notes","","",""]);
+    kpiHdr.height = 22;
+    ["Metric","","Value","","Notes","","",""].forEach((_,i)=>{ styleCell(kpiHdr.getCell(i+1),FILLS.header,FONTS.header,"center"); });
+    ws1.mergeCells(kpiHdr.number,1,kpiHdr.number,2);
+    ws1.mergeCells(kpiHdr.number,3,kpiHdr.number,4);
+    ws1.mergeCells(kpiHdr.number,5,kpiHdr.number,8);
+
+    const kpis=[
+      ["Total Work Items",tTotal,FILLS.white,FONTS.normal,"All developers combined"],
+      ["Active",tActive,tActive>0?FILLS.active:FILLS.white,tActive>0?FONTS.active:FONTS.normal,"Currently in progress"],
+      ["Closed",tClosed,tClosed>0?FILLS.closed:FILLS.white,tClosed>0?FONTS.closed:FONTS.normal,"Successfully completed"],
+      ["New / Backlog",tNew,tNew>0?FILLS.newF:FILLS.white,tNew>0?FONTS.newF:FONTS.normal,"Not yet started"],
+      ["Overdue (>30 days)",STATE.overdue.length,STATE.overdue.length>0?FILLS.overdue:FILLS.white,STATE.overdue.length>0?FONTS.overdue:FONTS.normal,"Active with no update in 30+ days"],
+      ["Completion Rate",tRate,coFill(tRate),coFont(tRate),"Closed ÷ Total × 100"],
+      ["Team Size",sorted.length,FILLS.white,FONTS.normal,"Number of active developers"],
+    ];
+    kpis.forEach(([label,val,vfill,vfont,note],i)=>{
+      const rf=rowFill(i);
+      const row=ws1.addRow([label,"",val,"",note,"","",""]);
+      row.height=18;
+      styleCell(row.getCell(1),rf,FONTS.bold,"left");
+      styleCell(row.getCell(2),rf,FONTS.normal);
+      ws1.mergeCells(row.number,1,row.number,2);
+      styleCell(row.getCell(3),vfill,vfont,"center");
+      styleCell(row.getCell(4),vfill,vfont,"center");
+      ws1.mergeCells(row.number,3,row.number,4);
+      styleCell(row.getCell(5),rf,FONTS.gray,"left");
+      for(let c=6;c<=8;c++){styleCell(row.getCell(c),rf,FONTS.gray);}
+      ws1.mergeCells(row.number,5,row.number,8);
+    });
+
+    blankRow(ws1, 8);
+    sectionRow(ws1, "  DEVELOPER BREAKDOWN", 8);
+    const devHdrRow = headerRow(ws1, ["#","Developer","Total","Active","Closed","New","Overdue","Completion %"]);
+    ws1.autoFilter = {from:{row:devHdrRow.number,column:1},to:{row:devHdrRow.number,column:8}};
+
+    sorted.forEach((d,i)=>{
+      const rf=rowFill(i);
+      const row=ws1.addRow([i+1,d.name,d.total,d.active,d.closed,d.new,d.overdue||0,cr(d)+"%"]);
+      row.height=18;
+      styleCell(row.getCell(1),rf,FONTS.normal,"center");
+      styleCell(row.getCell(2),rf,FONTS.bold,"left");
+      styleCell(row.getCell(3),rf,FONTS.normal,"center");
+      styleCell(row.getCell(4),d.active>0?FILLS.active:rf,d.active>0?FONTS.active:FONTS.normal,"center");
+      styleCell(row.getCell(5),d.closed>0?FILLS.closed:rf,d.closed>0?FONTS.closed:FONTS.normal,"center");
+      styleCell(row.getCell(6),d.new>0?FILLS.newF:rf,d.new>0?FONTS.newF:FONTS.normal,"center");
+      styleCell(row.getCell(7),(d.overdue||0)>0?FILLS.overdue:rf,(d.overdue||0)>0?FONTS.overdue:FONTS.normal,"center");
+      styleCell(row.getCell(8),coFill(cr(d)+"%"),coFont(cr(d)+"%"),"center");
+    });
+
+    // ══════════════════════════════════════════════════════════════
+    // DEVELOPER SHEETS
+    // ══════════════════════════════════════════════════════════════
+    sorted.forEach(dev=>{
+      const devItems=STATE.rawItems.filter(wi=>{
+        const a=wi.fields["System.AssignedTo"];
+        return a&&a.displayName.replace(" ABS","").trim()===dev.name;
+      });
+      const sn=dev.name.split(" ")[0].substring(0,31);
+const dws=wb.addWorksheet(sn,{views:[{showGridLines:false}]});
+dws.columns=[{width:12},{width:65},{width:14},{width:14},{width:20},{width:20}];
+
+      titleRow(dws, dev.name, 6, 30);
+      metaRow(dws,"Date Range",dateRange,6);
+      metaRow(dws,"Generated",now2.toLocaleDateString(),6);
+      blankRow(dws,6);
+      sectionRow(dws,"  SUMMARY",6);
+
+      const sumHdrRow=dws.addRow(["Metric","","Value","","",""]);
+      sumHdrRow.height=22;
+      styleCell(sumHdrRow.getCell(1),FILLS.header,FONTS.header,"center");
+      styleCell(sumHdrRow.getCell(2),FILLS.header,FONTS.header,"center");
+      dws.mergeCells(sumHdrRow.number,1,sumHdrRow.number,2);
+      styleCell(sumHdrRow.getCell(3),FILLS.header,FONTS.header,"center");
+      for(let c=4;c<=6;c++){styleCell(sumHdrRow.getCell(c),FILLS.header,FONTS.header,"center");}
+      dws.mergeCells(sumHdrRow.number,3,sumHdrRow.number,4);
+      dws.mergeCells(sumHdrRow.number,5,sumHdrRow.number,6);
+
+      const dkpis=[
+        ["Total Items",dev.total,FILLS.white,FONTS.normal],
+        ["Active",dev.active,dev.active>0?FILLS.active:FILLS.white,dev.active>0?FONTS.active:FONTS.normal],
+        ["Closed",dev.closed,dev.closed>0?FILLS.closed:FILLS.white,dev.closed>0?FONTS.closed:FONTS.normal],
+        ["New",dev.new,dev.new>0?FILLS.newF:FILLS.white,dev.new>0?FONTS.newF:FONTS.normal],
+        ["Overdue",(dev.overdue||0),(dev.overdue||0)>0?FILLS.overdue:FILLS.white,(dev.overdue||0)>0?FONTS.overdue:FONTS.normal],
+        ["Completion Rate",cr(dev)+"%",coFill(cr(dev)+"%"),coFont(cr(dev)+"%")],
+      ];
+      dkpis.forEach(([label,val,vfill,vfont],i)=>{
+        const rf=rowFill(i);
+        const row=dws.addRow([label,"",val,"","",""]);
+        row.height=18;
+        styleCell(row.getCell(1),rf,FONTS.bold,"left");
+        styleCell(row.getCell(2),rf,FONTS.normal);
+        dws.mergeCells(row.number,1,row.number,2);
+        styleCell(row.getCell(3),vfill,vfont,"center");
+        styleCell(row.getCell(4),vfill,vfont,"center");
+        dws.mergeCells(row.number,3,row.number,4);
+        styleCell(row.getCell(5),rf,FONTS.normal);
+        styleCell(row.getCell(6),rf,FONTS.normal);
+        dws.mergeCells(row.number,5,row.number,6);
+      });
+
+      blankRow(dws,6);
+      sectionRow(dws,`  WORK ITEMS  (${devItems.length} items)`,6);
+      const wiHdr=headerRow(dws,["ID","Title","State","Type","Changed Date","Created Date"]);
+      dws.autoFilter={from:{row:wiHdr.number,column:1},to:{row:wiHdr.number,column:6}};
+
+      devItems.forEach((wi,i)=>{
+        const f=wi.fields;
+        const state=f["System.State"]||"";
+        const type=f["System.WorkItemType"]||"";
+        const rf=rowFill(i);
+        const row=dws.addRow([
+          wi.id,
+          f["System.Title"]||"",
+          state, type,
+          f["System.ChangedDate"]?new Date(f["System.ChangedDate"]).toLocaleDateString():"",
+          f["System.CreatedDate"]?new Date(f["System.CreatedDate"]).toLocaleDateString():"",
+        ]);
+        row.height=35;
+        styleCell(row.getCell(1),rf,FONTS.normal,"center");
+        styleCell(row.getCell(2),rf,FONTS.normal,"left",true);
+        styleCell(row.getCell(3),stFill(state),stFont(state),"center");
+        styleCell(row.getCell(4),tyFill(type),tyFont(type),"center");
+        styleCell(row.getCell(5),rf,FONTS.normal,"center");
+        styleCell(row.getCell(6),rf,FONTS.normal,"center");
+      });
+    });
+
+    // ══════════════════════════════════════════════════════════════
+    // WORK TYPES SHEET
+    // ══════════════════════════════════════════════════════════════
+    const tws=wb.addWorksheet("Work Types",{views:[{showGridLines:false}]});
+    tws.columns=[{width:22},{width:12},{width:14}];
+    titleRow(tws,"Work Item Types",3,30);
+    metaRow(tws,"Date Range",dateRange,3);
+    blankRow(tws,3);
+    headerRow(tws,["Type","Count","Percentage"]);
+    Object.entries(STATE.types).sort((a,b)=>b[1]-a[1]).forEach(([l,v],i)=>{
+      const rf=rowFill(i);
+      const row=tws.addRow([l,v,Math.round(v/typeTotal*100)+"%"]);
+      row.height=18;
+      styleCell(row.getCell(1),tyFill(l),tyFont(l),"left");
+      styleCell(row.getCell(2),rf,FONTS.normal,"center");
+      styleCell(row.getCell(3),rf,FONTS.normal,"center");
+    });
+
+    // ── DOWNLOAD ────────────────────────────────────────────────
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ABS-Intelligence-"+now2.toISOString().split("T")[0]+".xlsx";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    hideLoad();
+
+  }catch(err){ hideLoad(); alert("Export error: "+err.message); }
+  },100);
+}
+
+
+// ── INIT ────────────────────────────────────────────────────────────
 const saved=getPAT();
-if(saved){document.getElementById("pat-input").value=saved;fetchLive();}
-else{openModal();}
+if(saved){
+  document.getElementById("pat-input").value=saved;
+  fetchLive();
+} else {
+  openModal();
+}
 </script>
 </body>
 </html>

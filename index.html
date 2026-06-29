@@ -911,7 +911,7 @@ function downloadExcel(){
     function styleCell(cell, fillObj, fontObj, hAlign, wrapText){
       cell.fill      = fillObj||FILLS.white;
       cell.font      = fontObj||FONTS.normal;
-      cell.alignment = {horizontal:hAlign||"left", vertical:"middle", wrapText:!!wrapText};
+      cell.alignment = {horizontal:hAlign||"left", vertical:"middle", wrapText:true};
       cell.border    = bdr;
     }
 
@@ -968,7 +968,7 @@ function downloadExcel(){
     // ══════════════════════════════════════════════════════════════
     const ws1 = wb.addWorksheet("Team Summary", {views:[{showGridLines:false}]});
     ws1.columns = [
-      {width:8},{width:40},{width:14},{width:14},{width:50},{width:8},{width:8},{width:8}
+      {width:22},{width:28},{width:12},{width:12},{width:12},{width:12},{width:12},{width:16}
     ];
 
     titleRow(ws1, "ABS-Central — Development Intelligence Report", 8, 30);
@@ -1038,7 +1038,7 @@ function downloadExcel(){
       });
       const sn=dev.name.split(" ")[0].substring(0,31);
       const dws=wb.addWorksheet(sn,{views:[{showGridLines:false}]});
-      dws.columns=[{width:8},{width:65},{width:14},{width:14},{width:16},{width:16}];
+      dws.columns=[{width:22},{width:70},{width:16},{width:16},{width:18},{width:18}];
 
       titleRow(dws, dev.name, 6, 30);
       metaRow(dws,"Date Range",dateRange,6);
@@ -1096,7 +1096,8 @@ function downloadExcel(){
           f["System.ChangedDate"]?new Date(f["System.ChangedDate"]).toLocaleDateString():"",
           f["System.CreatedDate"]?new Date(f["System.CreatedDate"]).toLocaleDateString():"",
         ]);
-        row.height=35;
+        const tLen=(f["System.Title"]||"").length;
+        row.height=tLen>100?55:tLen>60?42:tLen>30?30:22;
         styleCell(row.getCell(1),rf,FONTS.normal,"center");
         styleCell(row.getCell(2),rf,FONTS.normal,"left",true);
         styleCell(row.getCell(3),stFill(state),stFont(state),"center");
@@ -1110,7 +1111,7 @@ function downloadExcel(){
     // WORK TYPES SHEET
     // ══════════════════════════════════════════════════════════════
     const tws=wb.addWorksheet("Work Types",{views:[{showGridLines:false}]});
-    tws.columns=[{width:22},{width:12},{width:14}];
+    tws.columns=[{width:30},{width:14},{width:16}];
     titleRow(tws,"Work Item Types",3,30);
     metaRow(tws,"Date Range",dateRange,3);
     blankRow(tws,3);
@@ -1166,29 +1167,24 @@ function downloadExcel(){
           body:JSON.stringify(payload)
         });
         if(!resp.ok)throw new Error("Worker error "+resp.status);
-        const blob2=await resp.blob();
-        const url2=URL.createObjectURL(blob2);
-        // In sandboxed iframe: can't download, but can open blob in same frame
-        // which lets the browser handle it as a file
+        // Worker returns a download URL token
+        const result=await resp.json();
+        const downloadURL=result.url;
         hideLoad();
         if(inIframe){
-          // Write a redirect page that immediately downloads the file
-          const iframeDoc=document.open?document:null;
-          // Best approach: navigate current window to the blob URL
-          window.location.href=url2;
+          // Navigate iframe to worker download URL - browser handles file directly
+          window.location.href=downloadURL;
         } else {
           const a2=document.createElement("a");
-          a2.href=url2;
-          a2.download="ABS-Intelligence-"+new Date().toISOString().split("T")[0]+".xls";
+          a2.href=downloadURL;
+          a2.target="_blank";
           document.body.appendChild(a2);
           a2.click();
           document.body.removeChild(a2);
-          setTimeout(()=>URL.revokeObjectURL(url2),1000);
         }
       }catch(workerErr){
         hideLoad();
         console.error("Worker export failed:",workerErr.message);
-        alert("Worker error: "+workerErr.message);
         if(!inIframe){
           // Fallback to blob download in normal browser
           const link=document.createElement('a');

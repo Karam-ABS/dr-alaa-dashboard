@@ -255,9 +255,39 @@ tr:hover td{background:var(--s2);}
   .type-grid{grid-template-columns:repeat(2,1fr);}
   .velocity-metrics{grid-template-columns:repeat(2,1fr);}
 }
+/* SCROLLBAR STYLING */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--s1);
+  border-left: 1px solid var(--border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, var(--blue), var(--violet));
+  border-radius: 10px;
+  border: 2px solid var(--s1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, var(--cyan), var(--blue));
+  box-shadow: 0 0 8px rgba(42, 120, 214, 0.3);
+}
+
+* {
+  scrollbar-color: var(--blue) var(--s1);
+  scrollbar-width: thin;
+}
+
+html, body {
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
 </style>
 </head>
-<body>
+<body style="min-height: 100vh; overflow-x: hidden;">
 <div class="bg-mesh"></div>
 
 <!-- LOADING -->

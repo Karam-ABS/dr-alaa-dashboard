@@ -255,35 +255,36 @@ tr:hover td{background:var(--s2);}
   .type-grid{grid-template-columns:repeat(2,1fr);}
   .velocity-metrics{grid-template-columns:repeat(2,1fr);}
 }
-/* SCROLLBAR STYLING */
+/* SCROLLBAR STYLING - Azure DevOps Compatible */
 ::-webkit-scrollbar {
-  width: 12px;
+  width: 12px !important;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--s1);
-  border-left: 1px solid var(--border);
+  background: var(--s1) !important;
+  border-left: 1px solid var(--border) !important;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, var(--blue), var(--violet));
-  border-radius: 10px;
-  border: 2px solid var(--s1);
+  background: linear-gradient(to bottom, var(--blue), var(--violet)) !important;
+  border-radius: 10px !important;
+  border: 2px solid var(--s1) !important;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, var(--cyan), var(--blue));
-  box-shadow: 0 0 8px rgba(42, 120, 214, 0.3);
+  background: linear-gradient(to bottom, var(--cyan), var(--blue)) !important;
+  box-shadow: 0 0 8px rgba(42, 120, 214, 0.3) !important;
 }
 
-* {
-  scrollbar-color: var(--blue) var(--s1);
-  scrollbar-width: thin;
+html {
+  scrollbar-color: var(--blue) var(--s1) !important;
+  scrollbar-width: thin !important;
+  overflow-y: scroll !important;
 }
 
-html, body {
-  overflow-y: scroll;
-  overflow-x: hidden;
+body {
+  overflow-x: hidden !important;
+  height: 100vh !important;
 }
 </style>
 </head>
@@ -1142,6 +1143,19 @@ if(saved){
 } else {
   openModal();
 }
+// Force scrollbar visibility in Azure DevOps
+window.addEventListener('load', function() {
+  document.documentElement.style.overflowY = 'scroll';
+  document.body.style.minHeight = '100vh';
+  document.body.style.overflowX = 'hidden';
+  
+  // Force iframe parent to scroll
+  try {
+    window.parent.document.documentElement.style.overflowY = 'scroll';
+  } catch(e) {
+    // Cross-origin - ignore
+  }
+});
 </script>
 </body>
 </html>

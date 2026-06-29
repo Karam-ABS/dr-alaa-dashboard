@@ -1168,14 +1168,23 @@ function downloadExcel(){
         if(!resp.ok)throw new Error("Worker error "+resp.status);
         const blob2=await resp.blob();
         const url2=URL.createObjectURL(blob2);
-        const a2=document.createElement("a");
-        a2.href=url2;
-        a2.download="ABS-Intelligence-"+new Date().toISOString().split("T")[0]+".xls";
-        document.body.appendChild(a2);
-        a2.click();
-        document.body.removeChild(a2);
-        setTimeout(()=>URL.revokeObjectURL(url2),1000);
+        // In sandboxed iframe: can't download, but can open blob in same frame
+        // which lets the browser handle it as a file
         hideLoad();
+        if(inIframe){
+          // Write a redirect page that immediately downloads the file
+          const iframeDoc=document.open?document:null;
+          // Best approach: navigate current window to the blob URL
+          window.location.href=url2;
+        } else {
+          const a2=document.createElement("a");
+          a2.href=url2;
+          a2.download="ABS-Intelligence-"+new Date().toISOString().split("T")[0]+".xls";
+          document.body.appendChild(a2);
+          a2.click();
+          document.body.removeChild(a2);
+          setTimeout(()=>URL.revokeObjectURL(url2),1000);
+        }
       }catch(workerErr){
         hideLoad();
         console.error("Worker export failed:",workerErr.message);

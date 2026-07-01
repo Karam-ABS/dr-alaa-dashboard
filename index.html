@@ -217,7 +217,7 @@ tr:hover td{background:var(--s2);}
 .footer{text-align:center;font-size:11px;color:var(--muted);padding:28px 0 40px;border-top:0.5px solid var(--border);margin-top:12px;}
 
 /* MODAL */
-.overlay{display:none!important;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:200;align-items:center;justify-content:center;}
 .overlay.open{display:flex;}
 .modal{background:var(--s1);border:0.5px solid var(--border-strong);border-radius:20px;padding:40px;width:440px;max-width:90vw;animation:modalIn 0.3s ease;}
 @keyframes modalIn{from{opacity:0;transform:scale(0.95) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
@@ -302,6 +302,16 @@ body {
 
 
 <!-- TOPBAR -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-logo">A</div>
+    <h2>ABS Development Intelligence</h2>
+    <p>Enter your Azure DevOps Personal Access Token. Saved permanently in your browser — you only need to do this once.</p>
+    <input type="password" id="pat-input" placeholder="Paste your PAT here..." oninput="document.getElementById('pat-error').style.display='none'"/>
+    <div id="pat-error" style="display:none;color:var(--red);font-size:12px;margin:-4px 0 8px;padding:8px 12px;background:rgba(224,48,48,0.08);border-radius:8px;border:0.5px solid var(--red);"></div>
+    <button class="mbtn" onclick="savePATAndLoad()">Connect & Load Dashboard</button>
+  </div>
+</div>
 <div class="topbar">
   <div class="topbar-brand">
     <div class="topbar-logo">ABS</div>
@@ -449,7 +459,7 @@ const TYPE_COLORS={Epic:"#9d7fff",Feature:"#4d9fff","User Story":"#00d4a0",Task:
 let STATE={devs:[],types:{},velocity:[0,0,0,0,0,0,0,0],overdue:[],rawItems:[]};
 let CHARTS={};
 
-const getPAT=()=>"4nouw1pjRMXf2GpLtrh75okjtSGnY31i0srrSwt4wBJK6fvsUuB9JQQJ99CGACAAAAAiz4GtAAASAZDO3mjF";
+const getPAT=()=>"PLACEHOLDER_PAT";
 const auth=p=>"Basic "+btoa(":"+p);
 const cr=d=>d.total?Math.round(d.closed/d.total*100):0;
 const crColor=v=>v>=70?"var(--green)":v>=40?"var(--amber)":"var(--red)";
@@ -465,6 +475,14 @@ const showLoad=t=>{document.getElementById("loading").classList.add("show");docu
 const hideLoad=()=>document.getElementById("loading").classList.remove("show");
 
 function savePATAndLoad(){
+  const p=document.getElementById("pat-input").value.trim();
+  if(!p){
+    const e=document.getElementById("pat-error");
+    e.textContent="Please enter your PAT.";
+    e.style.display="block";
+    return;
+  }
+  localStorage.setItem("ado_pat",p);
   closeModal();
   fetchLive();
 }
@@ -499,6 +517,15 @@ async function fetchLive(forcePAT){
       {method:"POST",headers:{"Authorization":auth(pat),"Content-Type":"application/json"},
        body:JSON.stringify({query:"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject]='ABS-Central' AND [System.WorkItemType] IN ('Epic','Feature','User Story','Task','Issue') AND [System.Title] NOT CONTAINS 'SAP Service Call' AND ( ([System.ChangedDate] >= '"+dateStr(rangeStart)+"' AND [System.ChangedDate] <= '"+dateStr(rangeEnd)+"') OR ([System.CreatedDate] >= '"+dateStr(rangeStart)+"' AND [System.CreatedDate] <= '"+dateStr(rangeEnd)+"') OR ([Microsoft.VSTS.Scheduling.StartDate] >= '"+dateStr(rangeStart)+"' AND [Microsoft.VSTS.Scheduling.StartDate] <= '"+dateStr(rangeEnd)+"') OR ([Microsoft.VSTS.Scheduling.TargetDate] >= '"+dateStr(rangeStart)+"' AND [Microsoft.VSTS.Scheduling.TargetDate] <= '"+dateStr(rangeEnd)+"') ) ORDER BY [System.AssignedTo]"})});
     if(!wr.ok){
+      if(wr.status===401||wr.status===403){
+        localStorage.removeItem("ado_pat");
+        const errEl=document.getElementById("pat-error");
+        if(errEl){errEl.textContent="Invalid token ("+wr.status+"). Please check your PAT and try again.";errEl.style.display="block";}
+        if(document.getElementById("pat-input"))document.getElementById("pat-input").value="";
+        openModal();
+        hideLoad();
+        return;
+      }
       throw new Error("WIQL "+wr.status);
     }
     const wj=await wr.json();
@@ -1174,7 +1201,6 @@ function downloadExcel(){
   },100);
 }
 // ── INIT ────────────────────────────────────────────────────────────
-// PAT is hardcoded - auto load immediately
 fetchLive();
 // Force scrollbar visibility in Azure DevOps
 window.addEventListener('load', function() {

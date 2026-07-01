@@ -459,15 +459,7 @@ const TYPE_COLORS={Epic:"#9d7fff",Feature:"#4d9fff","User Story":"#00d4a0",Task:
 let STATE={devs:[],types:{},velocity:[0,0,0,0,0,0,0,0],overdue:[],rawItems:[]};
 let CHARTS={};
 
-const getPAT=()=>{
-  // Try URL hash first (works in iframes: set URL as https://...#PAT=yourtoken)
-  const hash=window.location.hash;
-  if(hash.startsWith("#PAT=")){
-    const p=decodeURIComponent(hash.slice(5));
-    if(p){localStorage.setItem("ado_pat",p);return p;}
-  }
-  return localStorage.getItem("ado_pat")||"";
-};
+const getPAT=()=>"4OE7TQ3JDAUsRlFc7Jxe46CXrMzO9SPg8TwyBHHkYosDzIKGgq0SJQQJ99CGACAAAAAiz4GtAAASAZDO43Pp";
 const auth=p=>"Basic "+btoa(":"+p);
 const cr=d=>d.total?Math.round(d.closed/d.total*100):0;
 const crColor=v=>v>=70?"var(--green)":v>=40?"var(--amber)":"var(--red)";
@@ -1222,20 +1214,8 @@ function downloadExcel(){
   },100);
 }
 // ── INIT ────────────────────────────────────────────────────────────
-const saved=getPAT();
-if(saved){
-  document.getElementById("pat-input").value=saved;
-  fetchLive();
-} else {
-  // If inside an iframe, show a cleaner message
-  const inIframe=window.self!==window.top;
-  if(inIframe){
-    // Try to open in new tab if modal can't show properly
-    document.getElementById("overlay").style.position="fixed";
-    document.getElementById("overlay").style.zIndex="99999";
-  }
-  openModal();
-}
+// PAT is hardcoded - auto load immediately
+fetchLive();
 // Force scrollbar visibility in Azure DevOps
 window.addEventListener('load', function() {
   document.documentElement.style.overflowY = 'scroll';

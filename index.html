@@ -475,17 +475,8 @@ const showLoad=t=>{document.getElementById("loading").classList.add("show");docu
 const hideLoad=()=>document.getElementById("loading").classList.remove("show");
 
 function savePATAndLoad(){
-  const p=document.getElementById("pat-input").value.trim();
-  if(!p){
-    const e=document.getElementById("pat-error");
-    e.textContent="Please enter your PAT.";
-    e.style.display="block";
-    return;
-  }
-  // Store temporarily without saving to session yet
-  window._tempPAT=p;
   closeModal();
-  fetchLive(p);
+  fetchLive();
 }
 
 function resetDates(){
@@ -500,7 +491,6 @@ function resetDates(){
 
 async function fetchLive(forcePAT){
   const pat=forcePAT||window._tempPAT||getPAT();
-  if(!pat){openModal();return;}
   showLoad("Running WIQL query...");
   try{
     const now=new Date();
@@ -519,18 +509,6 @@ async function fetchLive(forcePAT){
       {method:"POST",headers:{"Authorization":auth(pat),"Content-Type":"application/json"},
        body:JSON.stringify({query:"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject]='ABS-Central' AND [System.WorkItemType] IN ('Epic','Feature','User Story','Task','Issue') AND [System.Title] NOT CONTAINS 'SAP Service Call' AND ( ([System.ChangedDate] >= '"+dateStr(rangeStart)+"' AND [System.ChangedDate] <= '"+dateStr(rangeEnd)+"') OR ([System.CreatedDate] >= '"+dateStr(rangeStart)+"' AND [System.CreatedDate] <= '"+dateStr(rangeEnd)+"') OR ([Microsoft.VSTS.Scheduling.StartDate] >= '"+dateStr(rangeStart)+"' AND [Microsoft.VSTS.Scheduling.StartDate] <= '"+dateStr(rangeEnd)+"') OR ([Microsoft.VSTS.Scheduling.TargetDate] >= '"+dateStr(rangeStart)+"' AND [Microsoft.VSTS.Scheduling.TargetDate] <= '"+dateStr(rangeEnd)+"') ) ORDER BY [System.AssignedTo]"})});
     if(!wr.ok){
-      if(wr.status===401||wr.status===403||wr.status===400||wr.status===203||!wr.ok){
-        localStorage.removeItem("ado_pat");
-        window._tempPAT=null;
-        const errEl=document.getElementById("pat-error");
-        errEl.textContent="Invalid or incorrect token ("+wr.status+"). Please check your PAT and try again.";
-        errEl.style.display="block";
-        document.getElementById("pat-input").value="";
-        document.getElementById("pat-input").focus();
-        openModal();
-        hideLoad();
-        return;
-      }
       throw new Error("WIQL "+wr.status);
     }
     const wj=await wr.json();
@@ -549,8 +527,6 @@ async function fetchLive(forcePAT){
       all=all.concat(bj.value||[]);
     }
     showLoad("Processing data...");
-    // PAT is valid - now save it
-    localStorage.setItem("ado_pat",pat);
     window._tempPAT=null;
     STATE.rawItems=all;
     processData(all);
@@ -562,15 +538,9 @@ async function fetchLive(forcePAT){
     document.getElementById("footer").textContent=`ABS-Central · Dr. Alaa Intelligence · Last updated ${now.toLocaleString()} · ${all.length} items`;
   }catch(e){
     hideLoad();
-    localStorage.removeItem("ado_pat");
-    window._tempPAT=null;
-    const errEl=document.getElementById("pat-error");
-    if(errEl){
-      errEl.textContent="Connection failed: "+e.message+". Please check your PAT and try again.";
-      errEl.style.display="block";
-    }
-    document.getElementById("pat-input").value="";
-    openModal();
+    console.error("Dashboard error:",e.message);
+    // Show error on page instead of alert
+    document.getElementById("ts").textContent="Error: "+e.message+" — Check console for details";
   }
 }
 

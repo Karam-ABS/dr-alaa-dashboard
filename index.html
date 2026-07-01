@@ -459,7 +459,15 @@ const TYPE_COLORS={Epic:"#9d7fff",Feature:"#4d9fff","User Story":"#00d4a0",Task:
 let STATE={devs:[],types:{},velocity:[0,0,0,0,0,0,0,0],overdue:[],rawItems:[]};
 let CHARTS={};
 
-const getPAT=()=>"rPJa4Z65EwkkCN0wXiscPvmfryJEDrtW8lp8ZmhaberttGqCNesVJQQJ99CGACAAAAAiz4GtAAASAZDO1Bgi";
+const getPAT=()=>{
+  // Try URL hash first (works in iframes: set URL as https://...#PAT=yourtoken)
+  const hash=window.location.hash;
+  if(hash.startsWith("#PAT=")){
+    const p=decodeURIComponent(hash.slice(5));
+    if(p){localStorage.setItem("ado_pat",p);return p;}
+  }
+  return localStorage.getItem("ado_pat")||"";
+};
 const auth=p=>"Basic "+btoa(":"+p);
 const cr=d=>d.total?Math.round(d.closed/d.total*100):0;
 const crColor=v=>v>=70?"var(--green)":v>=40?"var(--amber)":"var(--red)";
@@ -527,6 +535,7 @@ async function fetchLive(forcePAT){
         errEl.style.display="block";
         document.getElementById("pat-input").value="";
         document.getElementById("pat-input").focus();
+        openModal();
         hideLoad();
         return;
       }
@@ -569,6 +578,7 @@ async function fetchLive(forcePAT){
       errEl.style.display="block";
     }
     document.getElementById("pat-input").value="";
+    openModal();
   }
 }
 
@@ -1212,7 +1222,8 @@ function downloadExcel(){
   },100);
 }
 // ── INIT ────────────────────────────────────────────────────────────
-fetchLive();
+const saved=getPAT();
+if(saved){fetchLive();}else{openModal();}
 // Force scrollbar visibility in Azure DevOps
 window.addEventListener('load', function() {
   document.documentElement.style.overflowY = 'scroll';
